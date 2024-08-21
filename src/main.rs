@@ -1,8 +1,8 @@
 use std::io::{self, Write};
-use to_do::task_manager::Tasks;
+use to_do::task_manager::TasksService;
 
 fn main() {
-    let mut tasks = Tasks::new();
+    let tasks = TasksService::new(&"tasks.db".to_string());
     loop {
         println!("\n--- To-Do List Manager ---");
         println!("1. Add Task");
@@ -17,18 +17,17 @@ fn main() {
         io::stdin().read_line(&mut choice).unwrap();
 
         match choice.trim() {
-            "1" => add_task(&mut tasks),
+            "1" => add_task(& tasks),
             "2" => view_tasks(&tasks),
-            "3" => mark_completed(&mut tasks),
-            "4" => delete_taks(&mut tasks),
+            "3" => mark_completed(&tasks),
+            "4" => delete_taks(&tasks),
             "5" => break,
             _ => println!("Invalid choice. Please try again."),
         }
     }
-
 }
 
-fn add_task(tasks: &mut Tasks) {
+fn add_task(tasks: &TasksService) {
     print!("Enter task description: ");
     io::stdout().flush().unwrap();
     let mut description = String::new();
@@ -38,22 +37,21 @@ fn add_task(tasks: &mut Tasks) {
     println!("Task added successfully!");
 }
 
-fn view_tasks(tasks: &Tasks) {
+fn view_tasks(tasks: &TasksService) {
     if tasks.is_empty() {
         println!("No tasks in the list.");
     } else {
         for task in tasks.get_all_tasks() {
-            println!(
-                "{}. [{}] {}",
-                task.id,
-                if task.completed { "x" } else { " " },
-                task.description
-            );
+            let s = format!("--- {:^8} ---\n[{}] {:>4}",
+                            format!("Task {}",task.id),
+                            if task.completed { "x" } else { " " },
+                            task.description);
+            println!("{s}");
         }
     }
 }
 
-fn mark_completed(tasks: &mut Tasks) {
+fn mark_completed(tasks: &TasksService) {
     view_tasks(tasks);
     if tasks.is_empty(){
         return;
@@ -76,7 +74,7 @@ fn mark_completed(tasks: &mut Tasks) {
     }
 }
 
-fn delete_taks(tasks: &mut Tasks) {
+fn delete_taks(tasks: &TasksService) {
     view_tasks(tasks);
     if tasks.is_empty(){
         return;

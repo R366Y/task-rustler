@@ -1,55 +1,104 @@
-use rusqlite::{params, Connection, Result};
 use crate::task_manager::Task;
+use anyhow::{Context, Result};
+use rusqlite::{params, Connection};
 
-pub fn create_and_return_connection(path: &str) -> Result<Connection> {
-    let conn = Connection::open(path)?;
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS tasks (
+#[derive(Debug)]
+pub struct DB {
+    connection: Connection,
+}
+
+impl DB {
+    /// Create and return a connection to a database located at path
+    /// if path is an empty string creates and in memory db instance
+    pub fn create_and_return_connection(path: &str) -> DB {
+        let conn: Connection = if path.is_empty() {
+            Connection::open_in_memory().unwrap()
+        } else {
+            Connection::open(path).unwrap()
+        };
+        let mut db = DB { connection: conn };
+        db.init();
+        db
+    }
+
+    fn init(&mut self) {
+        self.connection
+            .execute(
+                "CREATE TABLE IF NOT EXISTS tasks (
             id INTEGER PRIMARY KEY,
             description TEXT NOT NULL,
             completed BOOLEAN NOT NULL
         )",
-        [],
-    )?;
-    Ok(conn)
-}
+                [],
+            )
+            .unwrap();
+    }
 
-pub fn insert_task(conn: &Connection, description: &String) -> Result<()> {
-    conn.execute(
-        "INSERT INTO tasks (description, completed) VALUES (?1, 0)",
-        params![description.trim()],
-    )?;
-    Ok(())
-}
+    pub fn add_task(&self, description: &str) {
+        self.connection
+            .execute(
+                "INSERT INTO tasks (description, completed) VALUES (?1, 0)",
+                params![description.trim()],
+            )
+            .unwrap();
+    }
 
-pub fn get_all_tasks(conn: &Connection) -> Result<Vec<Task>> {
-    let mut stmt = conn.prepare("SELECT id, description, completed FROM tasks")?;
-    let task_row_map = stmt.query_map([], |row| {
-        Ok(Task {
-            id: row.get(0)?,
-            description: row.get(1)?,
-            completed: row.get(2)?,
+    pub fn get_all_tasks(&self) -> Vec<Task> {
+        let mut stmt = self
+            .connection
+            .prepare("SELECT id, description, completed FROM tasks")
+            .unwrap();
+        let task_row_iter = stmt
+            .query_map([], |row| {
+                Ok(Task {
+                    id: row.get(0)?,
+                    description: row.get(1)?,
+                    completed: row.get(2)?,
+                })
+            })
+            .unwrap();
+        let mut tasks = Vec::new();
+        for task in task_row_iter {
+            tasks.push(task.unwrap());
+        }
+        tasks
+    }
+
+    pub fn get_task_by_id(&self, task_id: i32) -> Result<Task> {
+        let mut stmt = self
+            .connection
+            .prepare("SELECT id, description, completed FROM tasks where id = ?1")?;
+        stmt.query_row(params![task_id], |row| {
+            Ok(Task {
+                id: row.get(0)?,
+                description: row.get(1)?,
+                completed: row.get(2)?,
+            })
         })
-    })?;
-    task_row_map.collect()
-}
+        .with_context(|| format!("Couldn't get task at index {task_id}"))
+    }
 
-pub fn get_task(conn: &Connection, task_id: i32) -> Result<Option<Task>> {
-    let mut stmt = conn.prepare("SELECT id, description, completed FROM tasks where id = ?1")?;
-    let task_row_map = stmt.query_map(params![task_id], |row| {
-        Ok(Task {
-            id: row.get(0)?,
-            description: row.get(1)?,
-            completed: row.get(2)?,
-        })
-    })?;
-    Ok(task_row_map.collect::<Result<Vec<Task>>>()?.last().cloned())
-}
+    pub fn set_task_completed(&self, task_id: i32) -> usize {
+        self.connection
+            .execute(
+                "UPDATE tasks SET completed = 1 WHERE id = ?1",
+                params![task_id],
+            )
+            .unwrap()
+    }
 
-pub fn set_task_completed(conn: &Connection, task_id: i32) -> Result<usize> {
-    conn.execute("UPDATE tasks SET completed = 1 WHERE id = ?1", params![task_id])
-}
+    pub fn delete_task(&self, task_id: i32) -> usize {
+        self.connection
+            .execute("delete from tasks where id = ?1", params![task_id])
+            .unwrap()
+    }
 
-pub fn delete_task(conn: &Connection, task_id: i32) -> Result<usize> {
-    conn.execute("delete from tasks where id = ?1", params![task_id])
+    pub fn get_record_count(&self) -> i64 {
+        let query = "SELECT count(*) FROM tasks";
+        self.connection.query_row(query, [], |r| r.get(0)).unwrap()
+    }
+
+    pub fn clear(&self) -> usize {
+        self.connection.execute("DELETE FROM tasks", []).unwrap()
+    }
 }
