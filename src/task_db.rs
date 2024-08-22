@@ -44,6 +44,15 @@ impl DB {
             .unwrap();
     }
 
+    pub fn add_task_with_priority(&self, description: &str, priority: Priority) {
+        self.connection
+            .execute(
+                "INSERT INTO tasks (description, completed, priority) VALUES (?1, 0, ?2)",
+                params![description.trim(), priority as u8],
+            )
+            .unwrap();
+    }
+
     pub fn get_all_tasks(&self) -> Vec<Task> {
         let mut stmt = self
             .connection
@@ -79,6 +88,50 @@ impl DB {
             })
         })
         .with_context(|| format!("Couldn't get task at index {task_id}"))
+    }
+
+    pub fn get_all_task_by_highest_priority(&self) -> Vec<Task> {
+        let mut stmt = self
+            .connection
+            .prepare("SELECT id, description, completed, priority FROM tasks order by priority desc")
+            .unwrap();
+        let task_row_iter = stmt
+            .query_map([], |row| {
+                Ok(Task {
+                    id: row.get(0)?,
+                    description: row.get(1)?,
+                    completed: row.get(2)?,
+                    priority: Priority::from_u8(row.get(3)?).unwrap(),
+                })
+            })
+            .unwrap();
+        let mut tasks = Vec::new();
+        for task in task_row_iter {
+            tasks.push(task.unwrap());
+        }
+        tasks
+    }
+
+    pub fn get_all_task_by_lowest_priority(&self) -> Vec<Task> {
+        let mut stmt = self
+            .connection
+            .prepare("SELECT id, description, completed, priority FROM tasks order by priority asc")
+            .unwrap();
+        let task_row_iter = stmt
+            .query_map([], |row| {
+                Ok(Task {
+                    id: row.get(0)?,
+                    description: row.get(1)?,
+                    completed: row.get(2)?,
+                    priority: Priority::from_u8(row.get(3)?).unwrap(),
+                })
+            })
+            .unwrap();
+        let mut tasks = Vec::new();
+        for task in task_row_iter {
+            tasks.push(task.unwrap());
+        }
+        tasks
     }
 
     pub fn set_task_completed(&self, task_id: i32) -> usize {

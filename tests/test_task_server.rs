@@ -1,18 +1,32 @@
-use to_do::task_manager::{Task, TasksService};
-
 #[cfg(test)]
 mod test {
-    use super::*;
+    use to_do::task_manager::{Priority, SortOrder};
+    use to_do::task_manager::{Task, TasksService};
 
     fn setup() -> TasksService {
         let tasks = TasksService::default();
         let tasks_to_add = vec![
-            Task::new(1, "First task".to_string()),
-            Task::new(2, "Second task".to_string()),
-            Task::new(3, "Third task".to_string()),
+            Task {
+                id: 1,
+                description: "First task".to_string(),
+                completed: false,
+                priority: Priority::Low,
+            },
+            Task {
+                id: 2,
+                description: "Second task".to_string(),
+                completed: false,
+                priority: Priority::Medium,
+            },
+            Task {
+                id: 3,
+                description: "Third task".to_string(),
+                completed: false,
+                priority: Priority::High,
+            },
         ];
         for t in tasks_to_add {
-            tasks.add_task(t.description);
+            tasks.add_task_with_priority(t.description, t.priority);
         }
         tasks
     }
@@ -58,5 +72,35 @@ mod test {
         assert_eq!(num_task_removed, 1);
         let num_task_removed = t.delete_task(100);
         assert_eq!(num_task_removed, 0);
+    }
+
+    #[test]
+    fn get_all_the_task_sorted_by_highest_priority() {
+        let t = setup();
+        let tasks = t.get_all_tasks_sorted(SortOrder::High);
+        assert_eq!(
+            tasks[0],
+            Task {
+                id: 3,
+                description: "Third task".to_string(),
+                completed: false,
+                priority: Priority::High,
+            }
+        );
+    }
+
+    #[test]
+    fn get_all_the_task_sorted_by_lowest_priority() {
+        let t = setup();
+        let tasks = t.get_all_tasks_sorted(SortOrder::Low);
+        assert_eq!(
+            tasks[0],
+            Task {
+                id: 1,
+                description: "First task".to_string(),
+                completed: false,
+                priority: Priority::Low,
+            }
+        );
     }
 }
