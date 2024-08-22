@@ -1,4 +1,4 @@
-use crate::task_manager::Task;
+use crate::task_manager::{Priority, Task};
 use anyhow::{Context, Result};
 use rusqlite::{params, Connection};
 
@@ -27,7 +27,8 @@ impl DB {
                 "CREATE TABLE IF NOT EXISTS tasks (
             id INTEGER PRIMARY KEY,
             description TEXT NOT NULL,
-            completed BOOLEAN NOT NULL
+            completed BOOLEAN NOT NULL,
+            priority INTEGER NOT NULL
         )",
                 [],
             )
@@ -37,7 +38,7 @@ impl DB {
     pub fn add_task(&self, description: &str) {
         self.connection
             .execute(
-                "INSERT INTO tasks (description, completed) VALUES (?1, 0)",
+                "INSERT INTO tasks (description, completed, priority) VALUES (?1, 0, 2)",
                 params![description.trim()],
             )
             .unwrap();
@@ -46,7 +47,7 @@ impl DB {
     pub fn get_all_tasks(&self) -> Vec<Task> {
         let mut stmt = self
             .connection
-            .prepare("SELECT id, description, completed FROM tasks")
+            .prepare("SELECT id, description, completed, priority FROM tasks")
             .unwrap();
         let task_row_iter = stmt
             .query_map([], |row| {
@@ -54,6 +55,7 @@ impl DB {
                     id: row.get(0)?,
                     description: row.get(1)?,
                     completed: row.get(2)?,
+                    priority: Priority::from_u8(row.get(3)?).unwrap(),
                 })
             })
             .unwrap();
@@ -67,12 +69,13 @@ impl DB {
     pub fn get_task_by_id(&self, task_id: i32) -> Result<Task> {
         let mut stmt = self
             .connection
-            .prepare("SELECT id, description, completed FROM tasks where id = ?1")?;
+            .prepare("SELECT id, description, completed, priority FROM tasks where id = ?1")?;
         stmt.query_row(params![task_id], |row| {
             Ok(Task {
                 id: row.get(0)?,
                 description: row.get(1)?,
                 completed: row.get(2)?,
+                priority: Priority::from_u8(row.get(3)?).unwrap(),
             })
         })
         .with_context(|| format!("Couldn't get task at index {task_id}"))

@@ -17,7 +17,7 @@ fn main() {
         io::stdin().read_line(&mut choice).unwrap();
 
         match choice.trim() {
-            "1" => add_task(& tasks),
+            "1" => add_task(&tasks),
             "2" => view_tasks(&tasks),
             "3" => mark_completed(&tasks),
             "4" => delete_taks(&tasks),
@@ -42,10 +42,12 @@ fn view_tasks(tasks: &TasksService) {
         println!("No tasks in the list.");
     } else {
         for task in tasks.get_all_tasks() {
-            let s = format!("--- {:^8} ---\n[{}] {:>4}",
-                            format!("Task {}",task.id),
-                            if task.completed { "x" } else { " " },
-                            task.description);
+            let s = format!(
+                "--- {:^8} ---\n[{}] {:>4}",
+                format!("Task {}", task.id),
+                if task.completed { "x" } else { " " },
+                task.description
+            );
             println!("{s}");
         }
     }
@@ -53,7 +55,7 @@ fn view_tasks(tasks: &TasksService) {
 
 fn mark_completed(tasks: &TasksService) {
     view_tasks(tasks);
-    if tasks.is_empty(){
+    if tasks.is_empty() {
         return;
     }
 
@@ -65,8 +67,7 @@ fn mark_completed(tasks: &TasksService) {
     if let Ok(task_id) = input.trim().parse::<i32>() {
         if tasks.mark_completed(task_id) > 0 {
             println!("Task marked as completed");
-        }
-        else {
+        } else {
             println!("Invalid task number!");
         }
     } else {
@@ -76,7 +77,7 @@ fn mark_completed(tasks: &TasksService) {
 
 fn delete_taks(tasks: &TasksService) {
     view_tasks(tasks);
-    if tasks.is_empty(){
+    if tasks.is_empty() {
         return;
     }
 
@@ -86,10 +87,9 @@ fn delete_taks(tasks: &TasksService) {
     io::stdin().read_line(&mut input).unwrap();
 
     if let Ok(task_id) = input.trim().parse::<i32>() {
-        if tasks.delete_task(task_id) > 0{
+        if tasks.delete_task(task_id) > 0 {
             println!("Task deleted");
-        }
-        else {
+        } else {
             println!("Invalid task number");
         }
     } else {
