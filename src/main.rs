@@ -1,5 +1,5 @@
 use std::io::{self, Write};
-use to_do::task_manager::TasksService;
+use to_do::task_manager::{Priority, SortOrder, Task, TasksService};
 
 fn main() {
     let tasks = TasksService::new(&"tasks.db".to_string());
@@ -8,8 +8,9 @@ fn main() {
         println!("1. Add Task");
         println!("2. View Tasks");
         println!("3. Mark Task as Completed");
-        println!("4. Delete Task");
-        println!("5. Quit");
+        println!("4. Change task priority");
+        println!("5. Delete Task");
+        println!("6. Quit");
         print!("Enter your choice: ");
         io::stdout().flush().unwrap();
 
@@ -20,8 +21,9 @@ fn main() {
             "1" => add_task(&tasks),
             "2" => view_tasks(&tasks),
             "3" => mark_completed(&tasks),
-            "4" => delete_taks(&tasks),
-            "5" => break,
+            "4" => change_task_priority(&tasks),
+            "5" => delete_taks(&tasks),
+            "6" => break,
             _ => println!("Invalid choice. Please try again."),
         }
     }
@@ -41,16 +43,27 @@ fn view_tasks(tasks: &TasksService) {
     if tasks.is_empty() {
         println!("No tasks in the list.");
     } else {
-        for task in tasks.get_all_tasks() {
-            let s = format!(
-                "--- {:^8} ---\n[{}] {:>4}",
-                format!("Task {}", task.id),
-                if task.completed { "x" } else { " " },
-                task.description
-            );
-            println!("{s}");
+        let sorted_tasks = tasks.get_all_tasks_sorted(SortOrder::High);
+        for task in sorted_tasks.iter().filter(|t| !t.completed) {
+            println!();
+            print_task(task);
+        }
+        for task in sorted_tasks.iter().filter(|t| t.completed) {
+            println!();
+            print_task(task);
         }
     }
+}
+
+fn print_task(task: &Task) {
+    let status = if task.completed { "[X]" } else { "[ ]" };
+    let priority = match task.priority {
+        Priority::High => "!!! ",
+        Priority::Medium => "!! ",
+        Priority::Low => "! ",
+    };
+
+    println!("{} Task {}: {}{}", status, task.id, priority, task.description);
 }
 
 fn mark_completed(tasks: &TasksService) {
@@ -67,6 +80,28 @@ fn mark_completed(tasks: &TasksService) {
     if let Ok(task_id) = input.trim().parse::<i32>() {
         if tasks.mark_completed(task_id) > 0 {
             println!("Task marked as completed");
+        } else {
+            println!("Invalid task number!");
+        }
+    } else {
+        println!("Invalid input. Please enter a number");
+    }
+}
+
+fn change_task_priority(tasks: &TasksService){
+    view_tasks(tasks);
+    if tasks.is_empty() {
+        return;
+    }
+
+    print!("Enter the task number to change priority: ");
+    io::stdout().flush().unwrap();
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).unwrap();
+
+    if let Ok(task_id) = input.trim().parse::<i32>() {
+        if tasks.get_task(task_id).is_some()  {
+            display_change_priority(tasks, task_id);
         } else {
             println!("Invalid task number!");
         }
@@ -95,4 +130,21 @@ fn delete_taks(tasks: &TasksService) {
     } else {
         println!("Invalid input. Please enter a number");
     }
+}
+
+fn display_change_priority(tasks: &TasksService, task_id: i32) {
+    print!("Enter the priority for the task (H)igh, (M)edium, (L)ow: ");
+    io::stdout().flush().unwrap();
+    let mut pri = String::new();
+    io::stdin().read_line(&mut pri).unwrap();
+
+    let _ = match pri.trim() {
+        "H" => tasks.change_priortiy(task_id, Priority::High),
+        "M" => tasks.change_priortiy(task_id, Priority::Medium),
+        "L" => tasks.change_priortiy(task_id, Priority::Low),
+        _ =>{
+            println!("Invalid value for priority");
+            0
+        }
+    };
 }

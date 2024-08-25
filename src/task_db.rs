@@ -143,6 +143,15 @@ impl DB {
             .unwrap()
     }
 
+    pub fn update_task_priority(&self, task_id: i32, priority: Priority) -> usize{
+        self.connection
+            .execute(
+                "UPDATE tasks SET priority = ?2 WHERE id = ?1",
+                params![task_id, priority as u8],
+            )
+            .unwrap()
+    }
+
     pub fn delete_task(&self, task_id: i32) -> usize {
         self.connection
             .execute("delete from tasks where id = ?1", params![task_id])

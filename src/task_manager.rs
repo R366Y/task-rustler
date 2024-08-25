@@ -1,9 +1,20 @@
+use std::fmt::{Display, Formatter};
 use crate::task_db::DB;
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Priority {
     High = 3,
     Medium = 2,
     Low = 1,
+}
+
+impl Display for Priority{
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Priority::High => write!(f, "High"),
+            Priority::Medium => write!(f, "Medium"),
+            Priority::Low => write!(f, "Low"),
+        }
+    }
 }
 
 impl Priority {
@@ -30,6 +41,7 @@ pub enum SortOrder {
     Low,
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct TasksService {
     db: DB,
@@ -94,6 +106,7 @@ impl TasksService {
         self.db.get_all_tasks()
     }
 
+    /// Return all the tasks sorted by `sort`
     pub fn get_all_tasks_sorted(&self, sort:SortOrder) -> Vec<Task> {
         match sort {
             SortOrder::High => self.db.get_all_task_by_highest_priority(),
@@ -104,6 +117,11 @@ impl TasksService {
     /// Mark a task completed with `task_id` number
     pub fn mark_completed(&self, task_id: i32) -> usize {
         self.db.set_task_completed(task_id)
+    }
+
+    /// Change priority of the task
+    pub fn change_priortiy(&self, task_id: i32, priority: Priority) -> usize {
+        self.db.update_task_priority(task_id, priority)
     }
 
     /// Delete a task with `task_id` number
