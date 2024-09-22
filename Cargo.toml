@@ -1,5 +1,5 @@
 [package]
-name = "to_do"
+name = "task_rustler"
 version = "0.1.0"
 authors = ["r366y"]
 edition = "2021"
@@ -9,5 +9,6 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.86"
 dirs = "5.0.1"
+ratatui = "0.28.1"
 rusqlite = { version = "0.32.1", features = ["bundled"] }
 
