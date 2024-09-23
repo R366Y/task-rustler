@@ -9,7 +9,7 @@ use task_rustler::ui;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let tasks = TasksService::new(&"tasks.db".to_string());
-    let app = App::new();
+    let app = App::test();
     let mut terminal = ratatui::init();
     let res = run_app(&mut terminal, app);
     ratatui::restore();
