@@ -134,6 +134,19 @@ impl DB {
         tasks
     }
 
+    pub fn toggle_task_completed(&self, task_id: i32, completed: bool) -> usize {
+        let completed = match completed {
+            true => 1,
+            false => 0,
+        };
+        self.connection
+            .execute(
+                "UPDATE tasks SET completed = ?2 WHERE id = ?1",
+                params![task_id, completed],
+            )
+            .unwrap()
+    }
+
     pub fn set_task_completed(&self, task_id: i32) -> usize {
         self.connection
             .execute(

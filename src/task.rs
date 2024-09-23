@@ -71,14 +71,14 @@ impl Ord for Priority {
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Task {
-    pub id: u32,
+    pub id: i32,
     pub description: String,
     pub completed: bool,
     pub priority: Priority,
 }
 
 impl Task {
-    pub fn new(id: u32, description: String) -> Self {
+    pub fn new(id: i32, description: String) -> Self {
         Self {
             id,
             description,

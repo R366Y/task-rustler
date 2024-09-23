@@ -1,4 +1,5 @@
 use ratatui::widgets::ListState;
+use crate::command::Command;
 use crate::task::{Priority, Task};
 use crate::task_manager::TasksService;
 
@@ -58,16 +59,6 @@ impl App {
         app
     }
 
-    /// Toggle completed for selected task status
-    pub fn toggle_item_status(&mut self) {
-        if let Some(index) = self.task_list.state.selected(){
-            let item = &mut self.task_list.items[index];
-            item.completed = match item.completed {
-                true => false,
-                false => true,
-            }
-        };
-    }
 
     /// Cycle through priorities
     pub fn toggle_item_priority(&mut self) {
@@ -78,7 +69,7 @@ impl App {
     }
 
     /// Copy task description into App.input and set the ui to InputMode::EditingExisting
-    pub fn start_editing_exisiting(&mut self) {
+    pub fn start_editing_existing(&mut self) {
         if let Some(index) = self.task_list.state.selected() {
             self.input = self.task_list.items[index].description.clone();
             self.input_mode = InputMode::EditingExisting;
@@ -121,5 +112,34 @@ impl App {
 
     pub fn select_last(&mut self) {
         self.task_list.state.select_last();
+    }
+
+    pub fn refresh_task_list(&mut self){
+        self.task_list.items = self.tasks_service.get_all_tasks()
+    }
+}
+
+
+/// Add a new task
+pub struct AddTaskCommand;
+impl Command for AddTaskCommand {
+    fn execute(&mut self, app: &mut App) {
+        app.tasks_service.add_task_with_priority(app.input.drain(..).collect(), Priority::Low);
+        app.refresh_task_list();
+    }
+}
+
+/// Toggle completed for selected task status
+pub struct TogglePriorityCommand;
+impl Command for TogglePriorityCommand {
+    fn execute(&mut self, app: &mut App) {
+        if let Some(index) = app.task_list.state.selected(){
+            let item = &mut app.task_list.items[index];
+            item.completed = match item.completed {
+                true => false,
+                false => true,
+            };
+            let _ = app.tasks_service.toggle_task_completed(item.id, item.completed);
+        };
     }
 }

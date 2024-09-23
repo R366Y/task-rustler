@@ -73,6 +73,10 @@ impl TasksService {
         self.db.set_task_completed(task_id)
     }
 
+    pub fn toggle_task_completed(&self, task_id: i32, completed: bool){
+        self.db.toggle_task_completed(task_id, completed);
+    }
+
     /// Change priority of the task
     pub fn change_priortiy(&self, task_id: i32, priority: Priority) -> usize {
         self.db.update_task_priority(task_id, priority)
