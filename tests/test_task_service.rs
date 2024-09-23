@@ -1,7 +1,8 @@
 #[cfg(test)]
 mod test {
-    use task_rustler::task_manager::{Priority, SortOrder};
-    use task_rustler::task_manager::{Task, TasksService};
+    use task_rustler::task::{Priority, Task};
+    use task_rustler::task_manager::SortOrder;
+    use task_rustler::task_manager::TasksService;
 
     fn setup() -> TasksService {
         let tasks = TasksService::default();

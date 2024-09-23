@@ -1,6 +1,6 @@
-use crate::task_manager::{Priority, Task};
 use anyhow::{Context, Result};
 use rusqlite::{params, Connection};
+use crate::task::{Priority, Task};
 
 #[derive(Debug)]
 pub struct DB {

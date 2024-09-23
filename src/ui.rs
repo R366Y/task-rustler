@@ -5,8 +5,7 @@ use ratatui::style::palette::tailwind::{BLUE, SLATE};
 use ratatui::style::Stylize;
 use ratatui::widgets::{Block, Borders, HighlightSpacing, List, ListItem, Paragraph};
 use crate::app::{App, InputMode};
-use crate::task_manager::{Priority, Task};
-
+use crate::task::{Priority, Task};
 const TODO_HEADER_STYLE: Style = Style::new().fg(SLATE.c100).bg(BLUE.c800);
 const NORMAL_ROW_BG: Color = SLATE.c950;
 const SELECTED_STYLE: Style = Style::new().bg(SLATE.c800).add_modifier(Modifier::BOLD);

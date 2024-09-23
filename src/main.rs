@@ -4,11 +4,9 @@ use ratatui::crossterm::event;
 use ratatui::crossterm::event::{Event, KeyCode};
 use ratatui::Terminal;
 use task_rustler::app::App;
-use task_rustler::task_manager::{Priority, SortOrder, Task, TasksService};
 use task_rustler::ui;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let tasks = TasksService::new(&"tasks.db".to_string());
     let app = App::test();
     let mut terminal = ratatui::init();
     let res = run_app(&mut terminal, app);
