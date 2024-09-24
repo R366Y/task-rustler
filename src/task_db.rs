@@ -165,6 +165,14 @@ impl DB {
             .unwrap()
     }
 
+    pub fn update_task_description(&self, task_id: i32, description: &str) -> usize {
+        self.connection
+            .execute(
+                "UPDATE tasks SET description = ?2 WHERE id = ?1",
+                params![task_id, description],
+            ).unwrap()
+    }
+
     pub fn delete_task(&self, task_id: i32) -> usize {
         self.connection
             .execute("delete from tasks where id = ?1", params![task_id])

@@ -60,22 +60,6 @@ impl App {
     }
 
 
-    /// Cycle through priorities
-    pub fn toggle_item_priority(&mut self) {
-        if let Some(index) = self.task_list.state.selected() {
-            let item = &mut self.task_list.items[index];
-            item.priority = item.priority.next();
-        }
-    }
-
-    /// Copy task description into App.input and set the ui to InputMode::EditingExisting
-    pub fn start_editing_existing(&mut self) {
-        if let Some(index) = self.task_list.state.selected() {
-            self.input = self.task_list.items[index].description.clone();
-            self.input_mode = InputMode::EditingExisting;
-        }
-    }
-
     /// Copy new description into the selected item and set the ui to InputMode::Normal
     pub fn finish_editing_existing(&mut self) {
         if let Some(index) = self.task_list.state.selected() {
@@ -130,8 +114,8 @@ impl Command for AddTaskCommand {
 }
 
 /// Toggle completed for selected task status
-pub struct TogglePriorityCommand;
-impl Command for TogglePriorityCommand {
+pub struct ToggleTaskStatusCommand;
+impl Command for ToggleTaskStatusCommand {
     fn execute(&mut self, app: &mut App) {
         if let Some(index) = app.task_list.state.selected(){
             let item = &mut app.task_list.items[index];
@@ -139,7 +123,40 @@ impl Command for TogglePriorityCommand {
                 true => false,
                 false => true,
             };
-            let _ = app.tasks_service.toggle_task_completed(item.id, item.completed);
+            let _ = app.tasks_service.toggle_task_status(item.id, item.completed);
         };
+    }
+}
+
+/// Switch between priorities
+pub struct ToggleItemPriorityCommand;
+impl Command for ToggleItemPriorityCommand {
+    fn execute(&mut self, app: &mut App) {
+        if let Some(index) = app.task_list.state.selected() {
+            let item = &mut app.task_list.items[index];
+            item.priority = item.priority.next();
+            app.tasks_service.change_priority(item.id, &item.priority);
+        }
+    }
+}
+
+pub struct StartEditingTaskCommand;
+impl Command for StartEditingTaskCommand {
+    fn execute(&mut self, app: &mut App) {
+        if let Some(index) = app.task_list.state.selected() {
+            app.input = app.task_list.items[index].description.clone();
+            app.input_mode = InputMode::EditingExisting;
+        }
+    }
+}
+
+pub struct FinishEditingTaskCommand;
+impl Command for FinishEditingTaskCommand {
+    fn execute(&mut self, app: &mut App) {
+        if let Some(index) = app.task_list.state.selected() {
+            app.task_list.items[index].description = app.input.drain(..).collect();
+            app.tasks_service.update_description(app.task_list.items[index].id, app.task_list.items[index].description.as_str())
+        }
+        app.input_mode = InputMode::Normal;
     }
 }

@@ -73,13 +73,17 @@ impl TasksService {
         self.db.set_task_completed(task_id)
     }
 
-    pub fn toggle_task_completed(&self, task_id: i32, completed: bool){
+    pub fn toggle_task_status(&self, task_id: i32, completed: bool){
         self.db.toggle_task_completed(task_id, completed);
     }
 
     /// Change priority of the task
-    pub fn change_priortiy(&self, task_id: i32, priority: Priority) -> usize {
-        self.db.update_task_priority(task_id, priority)
+    pub fn change_priority(&self, task_id: i32, priority: &Priority) -> usize {
+        self.db.update_task_priority(task_id, priority.to_owned())
+    }
+
+    pub fn update_description(&self, task_id: i32, description: &str){
+        self.db.update_task_description(task_id, description);
     }
 
     /// Delete a task with `task_id` number

@@ -1,9 +1,9 @@
-use ratatui::crossterm::event;
 use ratatui::crossterm::event::{Event, KeyCode};
+use ratatui::crossterm::event;
 use ratatui::Terminal;
 use std::error::Error;
 use std::io;
-use task_rustler::app::{AddTaskCommand, App, InputMode, TogglePriorityCommand};
+use task_rustler::app::{AddTaskCommand, App, FinishEditingTaskCommand, InputMode, StartEditingTaskCommand, ToggleItemPriorityCommand, ToggleTaskStatusCommand};
 use task_rustler::command::Command;
 use task_rustler::ui;
 
@@ -43,13 +43,13 @@ fn run_app<B: ratatui::backend::Backend>(
                         app.select_previous();
                     }
                     KeyCode::Char(' ') => {
-                        TogglePriorityCommand.execute(&mut app);
+                        ToggleTaskStatusCommand.execute(&mut app);
                     }
                     KeyCode::Char('m') => {
-                        app.start_editing_existing();
+                        StartEditingTaskCommand.execute(&mut app);
                     }
                     KeyCode::Char('p') => {
-                        app.toggle_item_priority();
+                        ToggleItemPriorityCommand.execute(&mut app);
                     }
                     KeyCode::Char('s') => {
                         app.sort_by_priority();
@@ -79,7 +79,7 @@ fn run_app<B: ratatui::backend::Backend>(
                 },
                 InputMode::EditingExisting => match key.code {
                     KeyCode::Enter => {
-                        app.finish_editing_existing();
+                        FinishEditingTaskCommand.execute(&mut app);
                     }
                     KeyCode::Char(c) => {
                         app.input.push(c);
