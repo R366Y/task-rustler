@@ -1,40 +1,5 @@
-use std::fmt::{Display, Formatter};
+use crate::task::{Priority, Task};
 use crate::task_db::DB;
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub enum Priority {
-    High = 3,
-    Medium = 2,
-    Low = 1,
-}
-
-impl Display for Priority{
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Priority::High => write!(f, "High"),
-            Priority::Medium => write!(f, "Medium"),
-            Priority::Low => write!(f, "Low"),
-        }
-    }
-}
-
-impl Priority {
-    pub fn from_u8(value: u8) -> Option<Priority> {
-        match value {
-            3 => Some(Priority::High),
-            2 => Some(Priority::Medium),
-            1 => Some(Priority::Low),
-            _ => None,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub struct Task {
-    pub id: u32,
-    pub description: String,
-    pub completed: bool,
-    pub priority: Priority,
-}
 
 pub enum SortOrder {
     High,
@@ -46,17 +11,6 @@ pub enum SortOrder {
 pub struct TasksService {
     db: DB,
     db_filename: String,
-}
-
-impl Task {
-    pub fn new(id: u32, description: String) -> Self {
-        Self {
-            id,
-            description,
-            completed: false,
-            priority: Priority::Medium,
-        }
-    }
 }
 
 impl Default for TasksService {
@@ -119,9 +73,17 @@ impl TasksService {
         self.db.set_task_completed(task_id)
     }
 
+    pub fn toggle_task_status(&self, task_id: i32, completed: bool){
+        self.db.toggle_task_completed(task_id, completed);
+    }
+
     /// Change priority of the task
-    pub fn change_priortiy(&self, task_id: i32, priority: Priority) -> usize {
-        self.db.update_task_priority(task_id, priority)
+    pub fn change_priority(&self, task_id: i32, priority: &Priority) -> usize {
+        self.db.update_task_priority(task_id, priority.to_owned())
+    }
+
+    pub fn update_description(&self, task_id: i32, description: &str){
+        self.db.update_task_description(task_id, description);
     }
 
     /// Delete a task with `task_id` number

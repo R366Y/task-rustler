@@ -1,6 +1,6 @@
-use crate::task_manager::{Priority, Task};
 use anyhow::{Context, Result};
 use rusqlite::{params, Connection};
+use crate::task::{Priority, Task};
 
 #[derive(Debug)]
 pub struct DB {
@@ -134,6 +134,19 @@ impl DB {
         tasks
     }
 
+    pub fn toggle_task_completed(&self, task_id: i32, completed: bool) -> usize {
+        let completed = match completed {
+            true => 1,
+            false => 0,
+        };
+        self.connection
+            .execute(
+                "UPDATE tasks SET completed = ?2 WHERE id = ?1",
+                params![task_id, completed],
+            )
+            .unwrap()
+    }
+
     pub fn set_task_completed(&self, task_id: i32) -> usize {
         self.connection
             .execute(
@@ -150,6 +163,14 @@ impl DB {
                 params![task_id, priority as u8],
             )
             .unwrap()
+    }
+
+    pub fn update_task_description(&self, task_id: i32, description: &str) -> usize {
+        self.connection
+            .execute(
+                "UPDATE tasks SET description = ?2 WHERE id = ?1",
+                params![task_id, description],
+            ).unwrap()
     }
 
     pub fn delete_task(&self, task_id: i32) -> usize {
