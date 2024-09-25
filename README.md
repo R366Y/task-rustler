@@ -3,35 +3,20 @@
 
 #### Features
 
-- Add and remove tasks
+- Add, modify and remove tasks
 - Mark a task as completed
 - Change task priority, there are three different priorities: High, Medium, Low.
 
-__Main menu__
-```
---- To-Do List Manager ---
-1. Add Task
-2. View Tasks
-3. Mark Task as Completed
-4. Change task priority
-5. Delete Task
-6. Quit
-Enter your choice: 
-```
+## Task list
+![main](/docs/task_list.png)
 
-__Tasks list__
-```
-[ ] Task 2: !!! second job
+--- 
+### Commands
 
-[ ] Task 3: !! Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-
-[ ] Task 5: ! hello!
-
-[X] Task 4: !! my task
-
-```
-__[ ]__ means task is not completed, __[X]__ task is completed  
-Priorities:  
-- !!! => High
-- !! => Medium
-- ! => Low
+- __e__ insert a new task
+![insert task](/docs/add_task.png)
+- __m__ modify selected task
+![modify task](/docs/modify_task.png)
+- __p__ change priority of a task
+- __s__ sort task by priority
+- __d__ delete task

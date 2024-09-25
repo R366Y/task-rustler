@@ -1,6 +1,6 @@
 [package]
 name = "task_rustler"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["r366y"]
 edition = "2021"
 
