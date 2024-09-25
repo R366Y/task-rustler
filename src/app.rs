@@ -59,23 +59,8 @@ impl App {
         app
     }
 
-
-    /// Copy new description into the selected item and set the ui to InputMode::Normal
-    pub fn finish_editing_existing(&mut self) {
-        if let Some(index) = self.task_list.state.selected() {
-            self.task_list.items[index].description = self.input.drain(..).collect();
-        }
-        self.input_mode = InputMode::Normal;
-    }
-
     pub fn sort_by_priority(&mut self) {
         self.task_list.items.sort_by(|a, b| b.priority.cmp(&a.priority))
-    }
-
-    pub fn delete_item(&mut self) {
-        if let Some(index) = self.task_list.state.selected() {
-            self.task_list.items.remove(index);
-        }
     }
 
     pub fn select_none(&mut self) {
@@ -158,5 +143,15 @@ impl Command for FinishEditingTaskCommand {
             app.tasks_service.update_description(app.task_list.items[index].id, app.task_list.items[index].description.as_str())
         }
         app.input_mode = InputMode::Normal;
+    }
+}
+
+pub struct DeleteTaskCommand;
+impl Command for DeleteTaskCommand {
+    fn execute(&mut self, app: &mut App) {
+        if let Some(index) = app.task_list.state.selected() {
+            app.tasks_service.delete_task(app.task_list.items[index].id);
+            app.task_list.items.remove(index);
+        }
     }
 }

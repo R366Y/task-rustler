@@ -3,7 +3,7 @@ use ratatui::crossterm::event;
 use ratatui::Terminal;
 use std::error::Error;
 use std::io;
-use task_rustler::app::{AddTaskCommand, App, FinishEditingTaskCommand, InputMode, StartEditingTaskCommand, ToggleItemPriorityCommand, ToggleTaskStatusCommand};
+use task_rustler::app::{AddTaskCommand, App, DeleteTaskCommand, FinishEditingTaskCommand, InputMode, StartEditingTaskCommand, ToggleItemPriorityCommand, ToggleTaskStatusCommand};
 use task_rustler::command::Command;
 use task_rustler::ui;
 
@@ -55,7 +55,7 @@ fn run_app<B: ratatui::backend::Backend>(
                         app.sort_by_priority();
                     }
                     KeyCode::Char('d') => {
-                        app.delete_item();
+                        DeleteTaskCommand.execute(&mut app);
                     }
                     _ => {}
                 },
