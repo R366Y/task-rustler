@@ -3,7 +3,8 @@ use ratatui::crossterm::event;
 use ratatui::Terminal;
 use std::error::Error;
 use std::io;
-use task_rustler::app::{AddTaskCommand, App, DeleteTaskCommand, FinishEditingTaskCommand, InputMode, StartEditingTaskCommand, ToggleItemPriorityCommand, ToggleTaskStatusCommand};
+use task_rustler::app::{AddTaskCommand, App, DeleteTaskCommand, FinishEditingTaskCommand, InputField,
+                        InputMode, StartEditingTaskCommand, ToggleItemPriorityCommand, ToggleTaskStatusCommand};
 use task_rustler::command::Command;
 use task_rustler::ui;
 
@@ -28,10 +29,14 @@ fn run_app<B: ratatui::backend::Backend>(
         terminal.draw(|f| ui::ui(f, &mut app))?;
 
         if let Event::Key(key) = event::read()? {
+            if key.kind == event::KeyEventKind::Release {
+                continue;
+            }
             match app.input_mode {
                 InputMode::Normal => match key.code {
                     KeyCode::Char('e') => {
                         app.input_mode = InputMode::Editing;
+                        app.input_field =InputField::Title;
                     }
                     KeyCode::Char('q') => {
                         return Ok(());
@@ -61,35 +66,52 @@ fn run_app<B: ratatui::backend::Backend>(
                 },
                 InputMode::Editing => match key.code {
                     KeyCode::Enter => {
-                        if !app.input.is_empty() {
+                        if !app.input_description.is_empty() {
                             AddTaskCommand.execute(&mut app);
                         }
                         app.input_mode = InputMode::Normal;
                     }
+                    KeyCode::Tab => app.next_input_field(),
                     KeyCode::Char(c) => {
-                        app.input.push(c);
+                        match app.input_field {
+                            InputField::Title => app.input_title.push(c),
+                            InputField::Description => app.input_description.push(c),
+                        }
                     }
                     KeyCode::Backspace => {
-                        app.input.pop();
+                        match app.input_field {
+                            InputField::Title => {app.input_title.pop();},
+                            InputField::Description => {app.input_description.pop();}
+                        }
                     }
                     KeyCode::Esc => {
                         app.input_mode = InputMode::Normal;
+                        app.input_title.clear();
+                        app.input_description.clear();
                     }
                     _ => {}
                 },
                 InputMode::EditingExisting => match key.code {
+                    KeyCode::Tab => app.next_input_field(),
                     KeyCode::Enter => {
                         FinishEditingTaskCommand.execute(&mut app);
                     }
                     KeyCode::Char(c) => {
-                        app.input.push(c);
+                        match app.input_field {
+                            InputField::Title => app.input_title.push(c),
+                            InputField::Description => app.input_description.push(c),
+                        }
                     }
                     KeyCode::Backspace => {
-                        app.input.pop();
+                        match app.input_field {
+                            InputField::Title => {app.input_title.pop();},
+                            InputField::Description => {app.input_description.pop();}
+                        }
                     }
                     KeyCode::Esc => {
-                        app.input.clear();
                         app.input_mode = InputMode::Normal;
+                        app.input_title.clear();
+                        app.input_description.clear();
                     }
                     _ => {}
                 },

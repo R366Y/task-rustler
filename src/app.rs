@@ -16,17 +16,25 @@ impl TaskList {
         }
     }
 }
-
+#[derive(Debug)]
 pub enum InputMode{
     Normal,
     Editing,
     EditingExisting,
 }
+#[derive(Debug)]
+pub enum InputField {
+    Title,
+    Description,
+    //sDate,
+}
 
 pub struct App {
     pub task_list: TaskList,
-    pub input: String,
+    pub input_title: String,
+    pub input_description: String,
     pub input_mode: InputMode,
+    pub input_field: InputField,
     pub tasks_service: TasksService
 }
 
@@ -34,8 +42,10 @@ impl App {
     pub fn new() -> App {
         App {
             task_list: TaskList::new(),
-            input: String::new(),
+            input_title: String::new(),
+            input_description: String::new(),
             input_mode: InputMode::Normal,
+            input_field: InputField::Title,
             tasks_service: TasksService::new(&"tasks.db".to_string()),
         }
     }
@@ -86,6 +96,14 @@ impl App {
     pub fn refresh_task_list(&mut self){
         self.task_list.items = self.tasks_service.get_all_tasks()
     }
+
+    pub fn next_input_field(&mut self) {
+        self.input_field = match self.input_field {
+            InputField::Title => InputField::Description,
+            //InputField::Description => InputField::Date,
+            InputField::Description => InputField::Title,
+        }
+    }
 }
 
 
@@ -93,7 +111,8 @@ impl App {
 pub struct AddTaskCommand;
 impl Command for AddTaskCommand {
     fn execute(&mut self, app: &mut App) {
-        app.tasks_service.add_task_with_priority(app.input.drain(..).collect(), Priority::Low);
+        let _: String = app.input_title.drain(..).collect();
+        app.tasks_service.add_task_with_priority(app.input_description.drain(..).collect(), Priority::Low);
         app.refresh_task_list();
     }
 }
@@ -129,8 +148,10 @@ pub struct StartEditingTaskCommand;
 impl Command for StartEditingTaskCommand {
     fn execute(&mut self, app: &mut App) {
         if let Some(index) = app.task_list.state.selected() {
-            app.input = app.task_list.items[index].description.clone();
+            app.input_title = String::new();
+            app.input_description = app.task_list.items[index].description.clone();
             app.input_mode = InputMode::EditingExisting;
+            app.input_field = InputField::Title;
         }
     }
 }
@@ -139,7 +160,8 @@ pub struct FinishEditingTaskCommand;
 impl Command for FinishEditingTaskCommand {
     fn execute(&mut self, app: &mut App) {
         if let Some(index) = app.task_list.state.selected() {
-            app.task_list.items[index].description = app.input.drain(..).collect();
+            let _: String = app.input_title.drain(..).collect();
+            app.task_list.items[index].description = app.input_description.drain(..).collect();
             app.tasks_service.update_description(app.task_list.items[index].id, app.task_list.items[index].description.as_str())
         }
         app.input_mode = InputMode::Normal;
