@@ -3,11 +3,10 @@ use ratatui::crossterm::event;
 use ratatui::Terminal;
 use std::error::Error;
 use std::io;
-use task_rustler::app::{AddTaskCommand, App, DeleteTaskCommand, EnterEditModeCommand,
-                        FinishEditingExistingTaskCommand, InputField, InputMode,
-                        StartEditingExistingTaskCommand, StopEditingCommand,
-                        ToggleItemPriorityCommand, ToggleTaskStatusCommand};
-use task_rustler::command::Command;
+use task_rustler::app::{App,
+                        InputField, InputMode
+};
+use task_rustler::command::*;
 use task_rustler::ui;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -31,6 +30,7 @@ fn run_app<B: ratatui::backend::Backend>(
         terminal.draw(|f| ui::ui(f, &mut app))?;
 
         if let Event::Key(key) = event::read()? {
+            // Capture only press key event
             if key.kind == event::KeyEventKind::Release {
                 continue;
             }
