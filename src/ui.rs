@@ -1,11 +1,11 @@
-use ratatui::{symbols, Frame};
-use ratatui::layout::{Constraint, Layout, Rect};
+use crate::app::{App, InputField, InputMode};
+use crate::task::{Priority, Task};
+use ratatui::layout::{Constraint, Layout, Position, Rect};
 use ratatui::prelude::{Color, Line, Modifier, Span, StatefulWidget, Style};
 use ratatui::style::palette::tailwind::{BLUE, SLATE};
 use ratatui::style::Stylize;
 use ratatui::widgets::{Block, Borders, HighlightSpacing, List, ListItem, Paragraph};
-use crate::app::{App, InputMode};
-use crate::task::{Priority, Task};
+use ratatui::{symbols, Frame};
 const TODO_HEADER_STYLE: Style = Style::new().fg(SLATE.c100).bg(BLUE.c800);
 const NORMAL_ROW_BG: Color = SLATE.c950;
 const SELECTED_STYLE: Style = Style::new().bg(SLATE.c800).add_modifier(Modifier::BOLD);
@@ -13,22 +13,42 @@ const TEXT_FG_COLOR: Color = SLATE.c200;
 const COMPLETED_TEXT_FG_COLOR: Color = SLATE.c500;
 
 pub fn ui(f: &mut Frame, app: &mut App) {
-    let [main_area, input_area, message_area] = Layout::vertical([
+    let [main_area, input_title_area, input_description_area, message_area] = Layout::vertical([
         Constraint::Min(1),
+        Constraint::Length(3),
         Constraint::Length(3),
         Constraint::Length(1),
     ])
-        .margin(2)
-        .areas(f.area());
+    .margin(2)
+    .areas(f.area());
+
+    match app.input_mode {
+        InputMode::Normal => {}
+        InputMode::Editing | InputMode::EditingExisting => {
+            let input_area = match app.input_field {
+                InputField::Title => input_title_area,
+                InputField::Description => input_description_area,
+            };
+            let x = input_area.x
+                + match app.input_field {
+                    InputField::Title => app.input_title.len() as u16,
+                    InputField::Description => app.input_description.len() as u16,
+                }
+                + 1;
+            let y = input_area.y + 1;
+            f.set_cursor_position(Position::new(x, y))
+        }
+    }
 
     render_list(f, app, main_area);
-    render_input_area(f, app, input_area);
+    render_input_title_area(f, app, input_title_area);
+    render_input_description_area(f, app, input_description_area);
     render_message_area(f, app, message_area);
 }
 
 fn render_list(f: &mut Frame, app: &mut App, area: Rect) {
     let block = Block::new()
-        .title(Line::raw("TODO List").centered())
+        .title(Line::raw("Task Rustler").centered())
         .borders(Borders::TOP)
         .border_set(symbols::border::EMPTY)
         .border_style(TODO_HEADER_STYLE)
@@ -51,22 +71,30 @@ fn render_list(f: &mut Frame, app: &mut App, area: Rect) {
     StatefulWidget::render(list, area, f.buffer_mut(), &mut app.task_list.state);
 }
 
-fn render_input_area(f: &mut Frame, app: &mut App, area: Rect) {
-    let input = Paragraph::new(app.input.as_str())
+fn render_input_title_area(f: &mut Frame, app: &mut App, area: Rect) {
+    let input = Paragraph::new(app.input_title.as_str())
         .style(match app.input_mode {
             InputMode::Normal => Style::default(),
             InputMode::Editing => Style::default().fg(Color::Yellow),
             InputMode::EditingExisting => Style::default().fg(Color::Cyan),
         })
-        .block(Block::default().borders(Borders::ALL).title("Input"));
+        .block(Block::default().borders(Borders::BOTTOM).title("Title"));
     f.render_widget(input, area);
+}
 
-    match app.input_mode {
-        InputMode::Normal => {}
-        InputMode::Editing | InputMode::EditingExisting => {
-            f.set_cursor(area.x + app.input.len() as u16 + 1, area.y + 1)
-        }
-    }
+fn render_input_description_area(f: &mut Frame, app: &mut App, area: Rect) {
+    let input = Paragraph::new(app.input_description.as_str())
+        .style(match app.input_mode {
+            InputMode::Normal => Style::default(),
+            InputMode::Editing => Style::default().fg(Color::Yellow),
+            InputMode::EditingExisting => Style::default().fg(Color::Cyan),
+        })
+        .block(
+            Block::default()
+                .borders(Borders::BOTTOM)
+                .title("Description"),
+        );
+    f.render_widget(input, area);
 }
 
 fn render_message_area(f: &mut Frame, app: &mut App, area: Rect) {
@@ -127,7 +155,7 @@ impl From<&Task> for ListItem<'_> {
                 Style::default().fg(priority_to_color(&value.priority)),
             ),
             Span::styled(
-                format!(" {}", value.description),
+                format!(" {} - {}", value.title, value.description),
                 Style::default().fg(TEXT_FG_COLOR),
             ),
         ];
@@ -138,7 +166,7 @@ impl From<&Task> for ListItem<'_> {
                 Style::default().fg(priority_to_color(&value.priority)),
             ),
             Span::styled(
-                format!(" {}", value.description),
+                format!(" {} - {}", value.title, value.description),
                 Style::default().fg(COMPLETED_TEXT_FG_COLOR),
             ),
         ];

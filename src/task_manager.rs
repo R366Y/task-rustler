@@ -31,13 +31,8 @@ impl TasksService {
         }
     }
 
-    /// Add a new task
-    pub fn add_task(&self, description: String) {
-        self.db.add_task(&description)
-    }
-
-    pub fn add_task_with_priority(&self, description: String, priority: Priority) {
-        self.db.add_task_with_priority(&description, priority)
+    pub fn add_new_task(&self, task: &Task) {
+        self.db.insert_task(task);
     }
 
     /// Get a task with `task_id`. Returns an Option containing the task or None
@@ -61,20 +56,15 @@ impl TasksService {
     }
 
     /// Return all the tasks sorted by `sort`
-    pub fn get_all_tasks_sorted(&self, sort:SortOrder) -> Vec<Task> {
+    pub fn get_all_tasks_sorted(&self, sort: SortOrder) -> Vec<Task> {
         match sort {
             SortOrder::High => self.db.get_all_task_by_highest_priority(),
             SortOrder::Low => self.db.get_all_task_by_lowest_priority(),
         }
     }
 
-    /// Mark a task completed with `task_id` number
-    pub fn mark_completed(&self, task_id: i32) -> usize {
-        self.db.set_task_completed(task_id)
-    }
-
-    pub fn toggle_task_status(&self, task_id: i32, completed: bool){
-        self.db.toggle_task_completed(task_id, completed);
+    pub fn toggle_task_status(&self, task_id: i32, completed: bool) -> usize {
+        self.db.toggle_task_completed(task_id, completed)
     }
 
     /// Change priority of the task
@@ -82,8 +72,8 @@ impl TasksService {
         self.db.update_task_priority(task_id, priority.to_owned())
     }
 
-    pub fn update_description(&self, task_id: i32, description: &str){
-        self.db.update_task_description(task_id, description);
+    pub fn update_task(&self, task: &Task) {
+        self.db.update_task(task);
     }
 
     /// Delete a task with `task_id` number

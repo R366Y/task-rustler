@@ -1,10 +1,10 @@
-use ratatui::crossterm::event::{Event, KeyCode};
 use ratatui::crossterm::event;
+use ratatui::crossterm::event::{Event, KeyCode};
 use ratatui::Terminal;
 use std::error::Error;
 use std::io;
-use task_rustler::app::{AddTaskCommand, App, DeleteTaskCommand, FinishEditingTaskCommand, InputMode, StartEditingTaskCommand, ToggleItemPriorityCommand, ToggleTaskStatusCommand};
-use task_rustler::command::Command;
+use task_rustler::app::{App, InputField, InputMode};
+use task_rustler::command::*;
 use task_rustler::ui;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -28,10 +28,14 @@ fn run_app<B: ratatui::backend::Backend>(
         terminal.draw(|f| ui::ui(f, &mut app))?;
 
         if let Event::Key(key) = event::read()? {
+            // Capture only press key event
+            if key.kind == event::KeyEventKind::Release {
+                continue;
+            }
             match app.input_mode {
                 InputMode::Normal => match key.code {
                     KeyCode::Char('e') => {
-                        app.input_mode = InputMode::Editing;
+                        EnterEditModeCommand.execute(&mut app);
                     }
                     KeyCode::Char('q') => {
                         return Ok(());
@@ -46,7 +50,7 @@ fn run_app<B: ratatui::backend::Backend>(
                         ToggleTaskStatusCommand.execute(&mut app);
                     }
                     KeyCode::Char('m') => {
-                        StartEditingTaskCommand.execute(&mut app);
+                        StartEditingExistingTaskCommand.execute(&mut app);
                     }
                     KeyCode::Char('p') => {
                         ToggleItemPriorityCommand.execute(&mut app);
@@ -61,35 +65,48 @@ fn run_app<B: ratatui::backend::Backend>(
                 },
                 InputMode::Editing => match key.code {
                     KeyCode::Enter => {
-                        if !app.input.is_empty() {
+                        if !app.input_description.is_empty() {
                             AddTaskCommand.execute(&mut app);
                         }
                         app.input_mode = InputMode::Normal;
                     }
-                    KeyCode::Char(c) => {
-                        app.input.push(c);
-                    }
-                    KeyCode::Backspace => {
-                        app.input.pop();
-                    }
+                    KeyCode::Tab => app.next_input_field(),
+                    KeyCode::Char(c) => match app.input_field {
+                        InputField::Title => app.input_title.push(c),
+                        InputField::Description => app.input_description.push(c),
+                    },
+                    KeyCode::Backspace => match app.input_field {
+                        InputField::Title => {
+                            app.input_title.pop();
+                        }
+                        InputField::Description => {
+                            app.input_description.pop();
+                        }
+                    },
                     KeyCode::Esc => {
-                        app.input_mode = InputMode::Normal;
+                        StopEditingCommand.execute(&mut app);
                     }
                     _ => {}
                 },
                 InputMode::EditingExisting => match key.code {
+                    KeyCode::Tab => app.next_input_field(),
                     KeyCode::Enter => {
-                        FinishEditingTaskCommand.execute(&mut app);
+                        FinishEditingExistingTaskCommand.execute(&mut app);
                     }
-                    KeyCode::Char(c) => {
-                        app.input.push(c);
-                    }
-                    KeyCode::Backspace => {
-                        app.input.pop();
-                    }
+                    KeyCode::Char(c) => match app.input_field {
+                        InputField::Title => app.input_title.push(c),
+                        InputField::Description => app.input_description.push(c),
+                    },
+                    KeyCode::Backspace => match app.input_field {
+                        InputField::Title => {
+                            app.input_title.pop();
+                        }
+                        InputField::Description => {
+                            app.input_description.pop();
+                        }
+                    },
                     KeyCode::Esc => {
-                        app.input.clear();
-                        app.input_mode = InputMode::Normal;
+                        StopEditingCommand.execute(&mut app);
                     }
                     _ => {}
                 },

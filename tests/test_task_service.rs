@@ -9,25 +9,28 @@ mod test {
         let tasks_to_add = vec![
             Task {
                 id: 1,
+                title: "My first task title".to_string(),
                 description: "First task".to_string(),
                 completed: false,
                 priority: Priority::Low,
             },
             Task {
                 id: 2,
+                title: "My second task title".to_string(),
                 description: "Second task".to_string(),
                 completed: false,
                 priority: Priority::Medium,
             },
             Task {
                 id: 3,
+                title: "My third task title".to_string(),
                 description: "Third task".to_string(),
                 completed: false,
                 priority: Priority::High,
             },
         ];
         for t in tasks_to_add {
-            tasks.add_task_with_priority(t.description, t.priority);
+            tasks.add_new_task(&t)
         }
         tasks
     }
@@ -45,10 +48,10 @@ mod test {
     #[test]
     fn should_return_task_if_id_exists() {
         let t = setup();
-        t.add_task("Hi".to_string());
+        t.add_new_task(&Task::default());
         let task = t.get_task(4).unwrap();
         assert_eq!(task.id, 4);
-        assert_eq!(task.description, "Hi");
+        assert_eq!(task.description, "Test task description");
         assert_eq!(task.completed, false);
     }
     #[test]
@@ -60,9 +63,9 @@ mod test {
     #[test]
     fn set_completed_should_return_1_if_task_exists_0_otherwise() {
         let t = setup();
-        let num_tasks_completed = t.mark_completed(1);
+        let num_tasks_completed = t.toggle_task_status(1, true);
         assert_eq!(num_tasks_completed, 1);
-        let num_tasks_completed = t.mark_completed(100);
+        let num_tasks_completed = t.toggle_task_status(100, true);
         assert_eq!(num_tasks_completed, 0);
     }
 
@@ -83,6 +86,7 @@ mod test {
             tasks[0],
             Task {
                 id: 3,
+                title: "My third task title".to_string(),
                 description: "Third task".to_string(),
                 completed: false,
                 priority: Priority::High,
@@ -98,6 +102,7 @@ mod test {
             tasks[0],
             Task {
                 id: 1,
+                title: "My first task title".to_string(),
                 description: "First task".to_string(),
                 completed: false,
                 priority: Priority::Low,
