@@ -56,14 +56,14 @@ impl TasksService {
     }
 
     /// Return all the tasks sorted by `sort`
-    pub fn get_all_tasks_sorted(&self, sort:SortOrder) -> Vec<Task> {
+    pub fn get_all_tasks_sorted(&self, sort: SortOrder) -> Vec<Task> {
         match sort {
             SortOrder::High => self.db.get_all_task_by_highest_priority(),
             SortOrder::Low => self.db.get_all_task_by_lowest_priority(),
         }
     }
 
-    pub fn toggle_task_status(&self, task_id: i32, completed: bool) -> usize{
+    pub fn toggle_task_status(&self, task_id: i32, completed: bool) -> usize {
         self.db.toggle_task_completed(task_id, completed)
     }
 
@@ -72,7 +72,7 @@ impl TasksService {
         self.db.update_task_priority(task_id, priority.to_owned())
     }
 
-    pub fn update_task(&self, task: &Task){
+    pub fn update_task(&self, task: &Task) {
         self.db.update_task(task);
     }
 

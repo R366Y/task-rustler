@@ -32,13 +32,15 @@ pub struct ToggleTaskStatusCommand;
 
 impl Command for ToggleTaskStatusCommand {
     fn execute(&mut self, app: &mut App) {
-        if let Some(index) = app.task_list.state.selected(){
+        if let Some(index) = app.task_list.state.selected() {
             let item = &mut app.task_list.items[index];
             item.completed = match item.completed {
                 true => false,
                 false => true,
             };
-            let _ = app.tasks_service.toggle_task_status(item.id, item.completed);
+            let _ = app
+                .tasks_service
+                .toggle_task_status(item.id, item.completed);
         };
     }
 }

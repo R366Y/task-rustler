@@ -9,7 +9,6 @@ pub enum Priority {
 }
 
 impl Priority {
-
     pub fn next(&self) -> Self {
         match self {
             Priority::Low => Priority::Medium,

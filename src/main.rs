@@ -1,11 +1,9 @@
-use ratatui::crossterm::event::{Event, KeyCode};
 use ratatui::crossterm::event;
+use ratatui::crossterm::event::{Event, KeyCode};
 use ratatui::Terminal;
 use std::error::Error;
 use std::io;
-use task_rustler::app::{App,
-                        InputField, InputMode
-};
+use task_rustler::app::{App, InputField, InputMode};
 use task_rustler::command::*;
 use task_rustler::ui;
 
@@ -73,18 +71,18 @@ fn run_app<B: ratatui::backend::Backend>(
                         app.input_mode = InputMode::Normal;
                     }
                     KeyCode::Tab => app.next_input_field(),
-                    KeyCode::Char(c) => {
-                        match app.input_field {
-                            InputField::Title => app.input_title.push(c),
-                            InputField::Description => app.input_description.push(c),
+                    KeyCode::Char(c) => match app.input_field {
+                        InputField::Title => app.input_title.push(c),
+                        InputField::Description => app.input_description.push(c),
+                    },
+                    KeyCode::Backspace => match app.input_field {
+                        InputField::Title => {
+                            app.input_title.pop();
                         }
-                    }
-                    KeyCode::Backspace => {
-                        match app.input_field {
-                            InputField::Title => {app.input_title.pop();},
-                            InputField::Description => {app.input_description.pop();}
+                        InputField::Description => {
+                            app.input_description.pop();
                         }
-                    }
+                    },
                     KeyCode::Esc => {
                         StopEditingCommand.execute(&mut app);
                     }
@@ -95,18 +93,18 @@ fn run_app<B: ratatui::backend::Backend>(
                     KeyCode::Enter => {
                         FinishEditingExistingTaskCommand.execute(&mut app);
                     }
-                    KeyCode::Char(c) => {
-                        match app.input_field {
-                            InputField::Title => app.input_title.push(c),
-                            InputField::Description => app.input_description.push(c),
+                    KeyCode::Char(c) => match app.input_field {
+                        InputField::Title => app.input_title.push(c),
+                        InputField::Description => app.input_description.push(c),
+                    },
+                    KeyCode::Backspace => match app.input_field {
+                        InputField::Title => {
+                            app.input_title.pop();
                         }
-                    }
-                    KeyCode::Backspace => {
-                        match app.input_field {
-                            InputField::Title => {app.input_title.pop();},
-                            InputField::Description => {app.input_description.pop();}
+                        InputField::Description => {
+                            app.input_description.pop();
                         }
-                    }
+                    },
                     KeyCode::Esc => {
                         StopEditingCommand.execute(&mut app);
                     }

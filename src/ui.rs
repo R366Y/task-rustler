@@ -13,11 +13,7 @@ const TEXT_FG_COLOR: Color = SLATE.c200;
 const COMPLETED_TEXT_FG_COLOR: Color = SLATE.c500;
 
 pub fn ui(f: &mut Frame, app: &mut App) {
-    let [
-    main_area,
-    input_title_area,
-    input_description_area,
-    message_area] = Layout::vertical([
+    let [main_area, input_title_area, input_description_area, message_area] = Layout::vertical([
         Constraint::Min(1),
         Constraint::Length(3),
         Constraint::Length(3),
@@ -27,17 +23,18 @@ pub fn ui(f: &mut Frame, app: &mut App) {
     .areas(f.area());
 
     match app.input_mode {
-        InputMode::Normal => {
-        }
+        InputMode::Normal => {}
         InputMode::Editing | InputMode::EditingExisting => {
             let input_area = match app.input_field {
                 InputField::Title => input_title_area,
                 InputField::Description => input_description_area,
             };
-            let x = input_area.x + match app.input_field {
-                InputField::Title => app.input_title.len() as u16,
-                InputField::Description => app.input_description.len() as u16,
-            } + 1;
+            let x = input_area.x
+                + match app.input_field {
+                    InputField::Title => app.input_title.len() as u16,
+                    InputField::Description => app.input_description.len() as u16,
+                }
+                + 1;
             let y = input_area.y + 1;
             f.set_cursor_position(Position::new(x, y))
         }
@@ -47,8 +44,6 @@ pub fn ui(f: &mut Frame, app: &mut App) {
     render_input_title_area(f, app, input_title_area);
     render_input_description_area(f, app, input_description_area);
     render_message_area(f, app, message_area);
-
-
 }
 
 fn render_list(f: &mut Frame, app: &mut App, area: Rect) {
@@ -83,11 +78,7 @@ fn render_input_title_area(f: &mut Frame, app: &mut App, area: Rect) {
             InputMode::Editing => Style::default().fg(Color::Yellow),
             InputMode::EditingExisting => Style::default().fg(Color::Cyan),
         })
-        .block(
-            Block::default()
-                .borders(Borders::BOTTOM)
-                .title("Title"),
-        );
+        .block(Block::default().borders(Borders::BOTTOM).title("Title"));
     f.render_widget(input, area);
 }
 
@@ -164,7 +155,7 @@ impl From<&Task> for ListItem<'_> {
                 Style::default().fg(priority_to_color(&value.priority)),
             ),
             Span::styled(
-                format!(" {} - {}",value.title,  value.description),
+                format!(" {} - {}", value.title, value.description),
                 Style::default().fg(TEXT_FG_COLOR),
             ),
         ];
@@ -175,7 +166,7 @@ impl From<&Task> for ListItem<'_> {
                 Style::default().fg(priority_to_color(&value.priority)),
             ),
             Span::styled(
-                format!(" {} - {}",value.title,  value.description),
+                format!(" {} - {}", value.title, value.description),
                 Style::default().fg(COMPLETED_TEXT_FG_COLOR),
             ),
         ];

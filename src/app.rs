@@ -1,6 +1,6 @@
-use ratatui::widgets::ListState;
 use crate::task::{Priority, Task};
 use crate::task_manager::TasksService;
+use ratatui::widgets::ListState;
 
 pub struct TaskList {
     pub items: Vec<Task>,
@@ -11,12 +11,12 @@ impl TaskList {
     pub fn new() -> TaskList {
         TaskList {
             items: vec![],
-            state: ListState::default()
+            state: ListState::default(),
         }
     }
 }
 #[derive(Debug)]
-pub enum InputMode{
+pub enum InputMode {
     Normal,
     Editing,
     EditingExisting,
@@ -34,7 +34,7 @@ pub struct App {
     pub input_description: String,
     pub input_mode: InputMode,
     pub input_field: InputField,
-    pub tasks_service: TasksService
+    pub tasks_service: TasksService,
 }
 
 impl App {
@@ -52,26 +52,28 @@ impl App {
     pub fn test() -> App {
         let mut app = App::new();
         app.task_list.items = vec![
-          Task{
-              id:0,
-              title: "Task 1 title".to_string(),
-              description: "Task 1".to_string(),
-              completed: true,
-              priority: Priority::Low
-          },
-          Task{
-              id:1,
-              title: "Task 2 title".to_string(),
-              description: "Task 2".to_string(),
-              completed: false,
-              priority: Priority::High
-          },
+            Task {
+                id: 0,
+                title: "Task 1 title".to_string(),
+                description: "Task 1".to_string(),
+                completed: true,
+                priority: Priority::Low,
+            },
+            Task {
+                id: 1,
+                title: "Task 2 title".to_string(),
+                description: "Task 2".to_string(),
+                completed: false,
+                priority: Priority::High,
+            },
         ];
         app
     }
 
     pub fn sort_by_priority(&mut self) {
-        self.task_list.items.sort_by(|a, b| b.priority.cmp(&a.priority))
+        self.task_list
+            .items
+            .sort_by(|a, b| b.priority.cmp(&a.priority))
     }
 
     pub fn select_none(&mut self) {
@@ -94,7 +96,7 @@ impl App {
         self.task_list.state.select_last();
     }
 
-    pub fn refresh_task_list(&mut self){
+    pub fn refresh_task_list(&mut self) {
         self.task_list.items = self.tasks_service.get_all_tasks()
     }
 
