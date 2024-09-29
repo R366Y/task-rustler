@@ -63,9 +63,9 @@ mod test {
     #[test]
     fn set_completed_should_return_1_if_task_exists_0_otherwise() {
         let t = setup();
-        let num_tasks_completed = t.mark_completed(1);
+        let num_tasks_completed = t.toggle_task_status(1, true);
         assert_eq!(num_tasks_completed, 1);
-        let num_tasks_completed = t.mark_completed(100);
+        let num_tasks_completed = t.toggle_task_status(100, true);
         assert_eq!(num_tasks_completed, 0);
     }
 

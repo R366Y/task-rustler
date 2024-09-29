@@ -163,16 +163,6 @@ impl DB {
             .unwrap()
     }
 
-    pub fn set_task_completed(&self, task_id: i32) -> usize {
-        self.connection
-            .execute(
-                "UPDATE tasks SET completed = 1 WHERE id = ?1",
-                params![task_id],
-            )
-            .context("Can't update the task completed property.")
-            .unwrap()
-    }
-
     pub fn update_task_priority(&self, task_id: i32, priority: Priority) -> usize{
         self.connection
             .execute(
@@ -183,12 +173,12 @@ impl DB {
             .unwrap()
     }
 
-    pub fn update_task_description(&self, task_id: i32, description: &str) -> usize {
+    pub fn update_task(&self, task: &Task) -> usize{
         self.connection
             .execute(
-                "UPDATE tasks SET description = ?2 WHERE id = ?1",
-                params![task_id, description],
-            ).context("Can't update the task description property.")
+                "UPDATE tasks SET title = ?2, description = ?3 WHERE id = ?1",
+                params![task.id, task.title, task.description],
+            ).context("Can't update the task.")
             .unwrap()
     }
 

@@ -109,6 +109,14 @@ impl App {
 }
 
 
+pub struct EnterEditModeCommand;
+impl Command for EnterEditModeCommand {
+    fn execute(&mut self, app: &mut App) {
+        app.input_mode = InputMode::Editing;
+        app.input_field = InputField::Title;
+    }
+}
+
 /// Add a new task
 pub struct AddTaskCommand;
 impl Command for AddTaskCommand {
@@ -149,12 +157,11 @@ impl Command for ToggleItemPriorityCommand {
 }
 
 /// Start editing a task
-pub struct StartEditingTaskCommand;
-impl Command for StartEditingTaskCommand {
+pub struct StartEditingExistingTaskCommand;
+impl Command for StartEditingExistingTaskCommand {
     fn execute(&mut self, app: &mut App) {
         if let Some(index) = app.task_list.state.selected() {
-            // TODO: take value from input field
-            app.input_title = String::new();
+            app.input_title = app.task_list.items[index].title.clone();
             app.input_description = app.task_list.items[index].description.clone();
             app.input_mode = InputMode::EditingExisting;
             app.input_field = InputField::Title;
@@ -162,14 +169,13 @@ impl Command for StartEditingTaskCommand {
     }
 }
 
-pub struct FinishEditingTaskCommand;
-impl Command for FinishEditingTaskCommand {
+pub struct FinishEditingExistingTaskCommand;
+impl Command for FinishEditingExistingTaskCommand {
     fn execute(&mut self, app: &mut App) {
         if let Some(index) = app.task_list.state.selected() {
-            // TODO: copy value into app input_title and write on DB
-            let _: String = app.input_title.drain(..).collect();
+            app.task_list.items[index].title = app.input_title.drain(..).collect();
             app.task_list.items[index].description = app.input_description.drain(..).collect();
-            app.tasks_service.update_description(app.task_list.items[index].id, app.task_list.items[index].description.as_str())
+            app.tasks_service.update_task(&app.task_list.items[index])
         }
         app.input_mode = InputMode::Normal;
     }
@@ -182,5 +188,14 @@ impl Command for DeleteTaskCommand {
             app.tasks_service.delete_task(app.task_list.items[index].id);
             app.task_list.items.remove(index);
         }
+    }
+}
+
+pub struct StopEditingCommand;
+impl Command for StopEditingCommand {
+    fn execute(&mut self, app: &mut App) {
+        app.input_mode = InputMode::Normal;
+        app.input_title.clear();
+        app.input_description.clear();
     }
 }

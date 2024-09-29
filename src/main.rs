@@ -3,8 +3,10 @@ use ratatui::crossterm::event;
 use ratatui::Terminal;
 use std::error::Error;
 use std::io;
-use task_rustler::app::{AddTaskCommand, App, DeleteTaskCommand, FinishEditingTaskCommand, InputField,
-                        InputMode, StartEditingTaskCommand, ToggleItemPriorityCommand, ToggleTaskStatusCommand};
+use task_rustler::app::{AddTaskCommand, App, DeleteTaskCommand, EnterEditModeCommand,
+                        FinishEditingExistingTaskCommand, InputField, InputMode,
+                        StartEditingExistingTaskCommand, StopEditingCommand,
+                        ToggleItemPriorityCommand, ToggleTaskStatusCommand};
 use task_rustler::command::Command;
 use task_rustler::ui;
 
@@ -35,8 +37,7 @@ fn run_app<B: ratatui::backend::Backend>(
             match app.input_mode {
                 InputMode::Normal => match key.code {
                     KeyCode::Char('e') => {
-                        app.input_mode = InputMode::Editing;
-                        app.input_field =InputField::Title;
+                        EnterEditModeCommand.execute(&mut app);
                     }
                     KeyCode::Char('q') => {
                         return Ok(());
@@ -51,7 +52,7 @@ fn run_app<B: ratatui::backend::Backend>(
                         ToggleTaskStatusCommand.execute(&mut app);
                     }
                     KeyCode::Char('m') => {
-                        StartEditingTaskCommand.execute(&mut app);
+                        StartEditingExistingTaskCommand.execute(&mut app);
                     }
                     KeyCode::Char('p') => {
                         ToggleItemPriorityCommand.execute(&mut app);
@@ -85,16 +86,14 @@ fn run_app<B: ratatui::backend::Backend>(
                         }
                     }
                     KeyCode::Esc => {
-                        app.input_mode = InputMode::Normal;
-                        app.input_title.clear();
-                        app.input_description.clear();
+                        StopEditingCommand.execute(&mut app);
                     }
                     _ => {}
                 },
                 InputMode::EditingExisting => match key.code {
                     KeyCode::Tab => app.next_input_field(),
                     KeyCode::Enter => {
-                        FinishEditingTaskCommand.execute(&mut app);
+                        FinishEditingExistingTaskCommand.execute(&mut app);
                     }
                     KeyCode::Char(c) => {
                         match app.input_field {
@@ -109,9 +108,7 @@ fn run_app<B: ratatui::backend::Backend>(
                         }
                     }
                     KeyCode::Esc => {
-                        app.input_mode = InputMode::Normal;
-                        app.input_title.clear();
-                        app.input_description.clear();
+                        StopEditingCommand.execute(&mut app);
                     }
                     _ => {}
                 },

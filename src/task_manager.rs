@@ -63,13 +63,8 @@ impl TasksService {
         }
     }
 
-    /// Mark a task completed with `task_id` number
-    pub fn mark_completed(&self, task_id: i32) -> usize {
-        self.db.set_task_completed(task_id)
-    }
-
-    pub fn toggle_task_status(&self, task_id: i32, completed: bool){
-        self.db.toggle_task_completed(task_id, completed);
+    pub fn toggle_task_status(&self, task_id: i32, completed: bool) -> usize{
+        self.db.toggle_task_completed(task_id, completed)
     }
 
     /// Change priority of the task
@@ -77,8 +72,8 @@ impl TasksService {
         self.db.update_task_priority(task_id, priority.to_owned())
     }
 
-    pub fn update_description(&self, task_id: i32, description: &str){
-        self.db.update_task_description(task_id, description);
+    pub fn update_task(&self, task: &Task){
+        self.db.update_task(task);
     }
 
     /// Delete a task with `task_id` number
