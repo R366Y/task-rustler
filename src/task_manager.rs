@@ -31,13 +31,8 @@ impl TasksService {
         }
     }
 
-    /// Add a new task
-    pub fn add_task(&self, description: String) {
-        self.db.add_task(&description)
-    }
-
-    pub fn add_task_with_priority(&self, description: String, priority: Priority) {
-        self.db.add_task_with_priority(&description, priority)
+    pub fn add_new_task(&self, task: &Task) {
+        self.db.insert_task(task);
     }
 
     /// Get a task with `task_id`. Returns an Option containing the task or None

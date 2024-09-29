@@ -12,9 +12,9 @@ impl DB {
     /// if path is an empty string creates and in memory db instance
     pub fn create_and_return_connection(path: &str) -> DB {
         let conn: Connection = if path.is_empty() {
-            Connection::open_in_memory().unwrap()
+            Connection::open_in_memory().context("Can't open in-memory DB.").unwrap()
         } else {
-            Connection::open(path).unwrap()
+            Connection::open(path).context("Can't open database").unwrap()
         };
         let mut db = DB { connection: conn };
         db.init();
@@ -26,48 +26,60 @@ impl DB {
             .execute(
                 "CREATE TABLE IF NOT EXISTS tasks (
             id INTEGER PRIMARY KEY,
+            title TEXT NOT NULL,
             description TEXT NOT NULL,
             completed BOOLEAN NOT NULL,
             priority INTEGER NOT NULL
         )",
                 [],
             )
+            .context("Can't create the DB")
             .unwrap();
     }
 
-    pub fn add_task(&self, description: &str) {
+    pub fn insert_task(&self, task: &Task) {
         self.connection
             .execute(
-                "INSERT INTO tasks (description, completed, priority) VALUES (?1, 0, 2)",
-                params![description.trim()],
+                "INSERT INTO tasks (title, description, completed, priority) VALUES (?1,?2, 0, ?3)",
+                params![task.title.trim(), task.description.trim(), task.priority.to_usize()],
             )
-            .unwrap();
+            .context("Can't add task to DB.").unwrap();
+    }
+
+    pub fn add_task_description(&self, description: &str) {
+        self.connection
+            .execute(
+                "INSERT INTO tasks (title, description, completed, priority) VALUES (?1,?2, 0, 2)",
+                params![" ", description.trim()],
+            )
+            .context("Can't add task to DB.").unwrap();
     }
 
     pub fn add_task_with_priority(&self, description: &str, priority: Priority) {
         self.connection
             .execute(
-                "INSERT INTO tasks (description, completed, priority) VALUES (?1, 0, ?2)",
-                params![description.trim(), priority as u8],
+                "INSERT INTO tasks (title, description, completed, priority) VALUES (?1,?2, 0, ?3)",
+                params![" ", description.trim(), priority as u8],
             )
-            .unwrap();
+            .context("Can't add task to DB.").unwrap();
     }
 
     pub fn get_all_tasks(&self) -> Vec<Task> {
         let mut stmt = self
             .connection
-            .prepare("SELECT id, description, completed, priority FROM tasks")
+            .prepare("SELECT id, title, description, completed, priority FROM tasks")
             .unwrap();
         let task_row_iter = stmt
             .query_map([], |row| {
                 Ok(Task {
                     id: row.get(0)?,
-                    description: row.get(1)?,
-                    completed: row.get(2)?,
-                    priority: Priority::from_u8(row.get(3)?).unwrap(),
+                    title: row.get(1)?,
+                    description: row.get(2)?,
+                    completed: row.get(3)?,
+                    priority: Priority::from_u8(row.get(4)?).unwrap(),
                 })
             })
-            .unwrap();
+            .context("Can't get results from DB.").unwrap();
         let mut tasks = Vec::new();
         for task in task_row_iter {
             tasks.push(task.unwrap());
@@ -78,13 +90,14 @@ impl DB {
     pub fn get_task_by_id(&self, task_id: i32) -> Result<Task> {
         let mut stmt = self
             .connection
-            .prepare("SELECT id, description, completed, priority FROM tasks where id = ?1")?;
+            .prepare("SELECT id, title, description, completed, priority FROM tasks where id = ?1")?;
         stmt.query_row(params![task_id], |row| {
             Ok(Task {
                 id: row.get(0)?,
-                description: row.get(1)?,
-                completed: row.get(2)?,
-                priority: Priority::from_u8(row.get(3)?).unwrap(),
+                title: row.get(1)?,
+                description: row.get(2)?,
+                completed: row.get(3)?,
+                priority: Priority::from_u8(row.get(4)?).unwrap(),
             })
         })
         .with_context(|| format!("Couldn't get task at index {task_id}"))
@@ -93,18 +106,19 @@ impl DB {
     pub fn get_all_task_by_highest_priority(&self) -> Vec<Task> {
         let mut stmt = self
             .connection
-            .prepare("SELECT id, description, completed, priority FROM tasks order by priority desc")
+            .prepare("SELECT id, title, description, completed, priority FROM tasks order by priority desc")
             .unwrap();
         let task_row_iter = stmt
             .query_map([], |row| {
                 Ok(Task {
                     id: row.get(0)?,
-                    description: row.get(1)?,
-                    completed: row.get(2)?,
-                    priority: Priority::from_u8(row.get(3)?).unwrap(),
+                    title: row.get(1)?,
+                    description: row.get(2)?,
+                    completed: row.get(3)?,
+                    priority: Priority::from_u8(row.get(4)?).unwrap(),
                 })
             })
-            .unwrap();
+            .context("Couldn't get results from DB.").unwrap();
         let mut tasks = Vec::new();
         for task in task_row_iter {
             tasks.push(task.unwrap());
@@ -115,18 +129,19 @@ impl DB {
     pub fn get_all_task_by_lowest_priority(&self) -> Vec<Task> {
         let mut stmt = self
             .connection
-            .prepare("SELECT id, description, completed, priority FROM tasks order by priority asc")
+            .prepare("SELECT id, title, description, completed, priority FROM tasks order by priority asc")
             .unwrap();
         let task_row_iter = stmt
             .query_map([], |row| {
                 Ok(Task {
                     id: row.get(0)?,
-                    description: row.get(1)?,
-                    completed: row.get(2)?,
-                    priority: Priority::from_u8(row.get(3)?).unwrap(),
+                    title: row.get(1)?,
+                    description: row.get(2)?,
+                    completed: row.get(3)?,
+                    priority: Priority::from_u8(row.get(4)?).unwrap(),
                 })
             })
-            .unwrap();
+            .context("Couldn't get results from DB.").unwrap();
         let mut tasks = Vec::new();
         for task in task_row_iter {
             tasks.push(task.unwrap());
@@ -144,6 +159,7 @@ impl DB {
                 "UPDATE tasks SET completed = ?2 WHERE id = ?1",
                 params![task_id, completed],
             )
+            .context("Can't update the task completed property.")
             .unwrap()
     }
 
@@ -153,6 +169,7 @@ impl DB {
                 "UPDATE tasks SET completed = 1 WHERE id = ?1",
                 params![task_id],
             )
+            .context("Can't update the task completed property.")
             .unwrap()
     }
 
@@ -162,6 +179,7 @@ impl DB {
                 "UPDATE tasks SET priority = ?2 WHERE id = ?1",
                 params![task_id, priority as u8],
             )
+            .context("Can't update the task priority property.")
             .unwrap()
     }
 
@@ -170,21 +188,25 @@ impl DB {
             .execute(
                 "UPDATE tasks SET description = ?2 WHERE id = ?1",
                 params![task_id, description],
-            ).unwrap()
+            ).context("Can't update the task description property.")
+            .unwrap()
     }
 
     pub fn delete_task(&self, task_id: i32) -> usize {
         self.connection
             .execute("delete from tasks where id = ?1", params![task_id])
+            .context("Can't delete the task.")
             .unwrap()
     }
 
     pub fn get_record_count(&self) -> i64 {
         let query = "SELECT count(*) FROM tasks";
-        self.connection.query_row(query, [], |r| r.get(0)).unwrap()
+        self.connection.query_row(query, [], |r| r.get(0))
+            .context("Can't get record count").unwrap()
     }
 
     pub fn clear(&self) -> usize {
-        self.connection.execute("DELETE FROM tasks", []).unwrap()
+        self.connection.execute("DELETE FROM tasks", [])
+            .context("Can't clear database").unwrap()
     }
 }

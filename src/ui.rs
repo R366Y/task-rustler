@@ -164,7 +164,7 @@ impl From<&Task> for ListItem<'_> {
                 Style::default().fg(priority_to_color(&value.priority)),
             ),
             Span::styled(
-                format!(" {}", value.description),
+                format!(" {} - {}",value.title,  value.description),
                 Style::default().fg(TEXT_FG_COLOR),
             ),
         ];
@@ -175,7 +175,7 @@ impl From<&Task> for ListItem<'_> {
                 Style::default().fg(priority_to_color(&value.priority)),
             ),
             Span::styled(
-                format!(" {}", value.description),
+                format!(" {} - {}",value.title,  value.description),
                 Style::default().fg(COMPLETED_TEXT_FG_COLOR),
             ),
         ];

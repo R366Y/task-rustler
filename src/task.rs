@@ -72,18 +72,29 @@ impl Ord for Priority {
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Task {
     pub id: i32,
+    pub title: String,
     pub description: String,
     pub completed: bool,
     pub priority: Priority,
 }
 
+impl Default for Task {
+    fn default() -> Self {
+        let mut t = Task::new();
+        t.title = "Test task title".to_string();
+        t.description = "Test task description".to_string();
+        t
+    }
+}
+
 impl Task {
-    pub fn new(id: i32, description: String) -> Self {
+    pub fn new() -> Self {
         Self {
-            id,
-            description,
+            id: 0,
+            title: String::new(),
+            description: String::new(),
             completed: false,
-            priority: Priority::Medium,
+            priority: Priority::Low,
         }
     }
 }

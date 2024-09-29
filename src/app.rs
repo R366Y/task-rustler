@@ -55,12 +55,14 @@ impl App {
         app.task_list.items = vec![
           Task{
               id:0,
+              title: "Task 1 title".to_string(),
               description: "Task 1".to_string(),
               completed: true,
               priority: Priority::Low
           },
           Task{
               id:1,
+              title: "Task 2 title".to_string(),
               description: "Task 2".to_string(),
               completed: false,
               priority: Priority::High
@@ -111,8 +113,10 @@ impl App {
 pub struct AddTaskCommand;
 impl Command for AddTaskCommand {
     fn execute(&mut self, app: &mut App) {
-        let _: String = app.input_title.drain(..).collect();
-        app.tasks_service.add_task_with_priority(app.input_description.drain(..).collect(), Priority::Low);
+        let mut t = Task::new();
+        t.title = app.input_title.drain(..).collect();
+        t.description = app.input_description.drain(..).collect();
+        app.tasks_service.add_new_task(&t);
         app.refresh_task_list();
     }
 }
@@ -144,10 +148,12 @@ impl Command for ToggleItemPriorityCommand {
     }
 }
 
+/// Start editing a task
 pub struct StartEditingTaskCommand;
 impl Command for StartEditingTaskCommand {
     fn execute(&mut self, app: &mut App) {
         if let Some(index) = app.task_list.state.selected() {
+            // TODO: take value from input field
             app.input_title = String::new();
             app.input_description = app.task_list.items[index].description.clone();
             app.input_mode = InputMode::EditingExisting;
@@ -160,6 +166,7 @@ pub struct FinishEditingTaskCommand;
 impl Command for FinishEditingTaskCommand {
     fn execute(&mut self, app: &mut App) {
         if let Some(index) = app.task_list.state.selected() {
+            // TODO: copy value into app input_title and write on DB
             let _: String = app.input_title.drain(..).collect();
             app.task_list.items[index].description = app.input_description.drain(..).collect();
             app.tasks_service.update_description(app.task_list.items[index].id, app.task_list.items[index].description.as_str())
