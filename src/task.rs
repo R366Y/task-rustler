@@ -75,6 +75,7 @@ pub struct Task {
     pub description: String,
     pub completed: bool,
     pub priority: Priority,
+    pub date: Option<String>,
 }
 
 impl Default for Task {
@@ -94,6 +95,7 @@ impl Task {
             description: String::new(),
             completed: false,
             priority: Priority::Low,
+            date: Some(String::from("30-09-24")),
         }
     }
 }

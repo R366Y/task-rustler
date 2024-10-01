@@ -74,6 +74,7 @@ fn run_app<B: ratatui::backend::Backend>(
                     KeyCode::Char(c) => match app.input_field {
                         InputField::Title => app.input_title.push(c),
                         InputField::Description => app.input_description.push(c),
+                        InputField::Date => app.input_date.push(c),
                     },
                     KeyCode::Backspace => match app.input_field {
                         InputField::Title => {
@@ -81,6 +82,9 @@ fn run_app<B: ratatui::backend::Backend>(
                         }
                         InputField::Description => {
                             app.input_description.pop();
+                        }
+                        InputField::Date => {
+                            app.input_date.pop();
                         }
                     },
                     KeyCode::Esc => {
@@ -96,6 +100,7 @@ fn run_app<B: ratatui::backend::Backend>(
                     KeyCode::Char(c) => match app.input_field {
                         InputField::Title => app.input_title.push(c),
                         InputField::Description => app.input_description.push(c),
+                        InputField::Date => app.input_date.push(c),
                     },
                     KeyCode::Backspace => match app.input_field {
                         InputField::Title => {
@@ -103,6 +108,9 @@ fn run_app<B: ratatui::backend::Backend>(
                         }
                         InputField::Description => {
                             app.input_description.pop();
+                        }
+                        InputField::Date => {
+                            app.input_date.pop();
                         }
                     },
                     KeyCode::Esc => {

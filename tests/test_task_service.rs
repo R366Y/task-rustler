@@ -13,6 +13,7 @@ mod test {
                 description: "First task".to_string(),
                 completed: false,
                 priority: Priority::Low,
+                date: None,
             },
             Task {
                 id: 2,
@@ -20,6 +21,7 @@ mod test {
                 description: "Second task".to_string(),
                 completed: false,
                 priority: Priority::Medium,
+                date: None,
             },
             Task {
                 id: 3,
@@ -27,6 +29,7 @@ mod test {
                 description: "Third task".to_string(),
                 completed: false,
                 priority: Priority::High,
+                date: None,
             },
         ];
         for t in tasks_to_add {
@@ -90,6 +93,7 @@ mod test {
                 description: "Third task".to_string(),
                 completed: false,
                 priority: Priority::High,
+                date: None,
             }
         );
     }
@@ -106,6 +110,7 @@ mod test {
                 description: "First task".to_string(),
                 completed: false,
                 priority: Priority::Low,
+                date: None,
             }
         );
     }
