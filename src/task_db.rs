@@ -1,6 +1,9 @@
 use crate::task::{Priority, Task};
 use anyhow::{Context, Result};
-use rusqlite::{params, Connection, Row};
+use chrono::NaiveDate;
+use rusqlite::{params, Connection, Row, ToSql};
+use rusqlite::types::{FromSql, FromSqlResult, ToSqlOutput, ValueRef};
+use crate::date::{Date, DATE_FORMAT};
 
 #[derive(Debug)]
 pub struct DB {
@@ -33,7 +36,8 @@ impl DB {
             title TEXT NOT NULL,
             description TEXT NOT NULL,
             completed BOOLEAN NOT NULL,
-            priority INTEGER NOT NULL
+            priority INTEGER NOT NULL,
+            end_date DATE
         )",
                 [],
             )
@@ -44,11 +48,12 @@ impl DB {
     pub fn insert_task(&self, task: &Task) {
         self.connection
             .execute(
-                "INSERT INTO tasks (title, description, completed, priority) VALUES (?1,?2, 0, ?3)",
+                "INSERT INTO tasks (title, description, completed, priority, end_date) VALUES (?1, ?2, 0, ?3, ?4)",
                 params![
                     task.title.trim(),
                     task.description.trim(),
-                    task.priority.to_usize()
+                    task.priority.to_usize(),
+                    task.date,
                 ],
             )
             .context("Can't add task to DB.")
@@ -58,7 +63,7 @@ impl DB {
     pub fn get_all_tasks(&self) -> Vec<Task> {
         let mut stmt = self
             .connection
-            .prepare("SELECT id, title, description, completed, priority FROM tasks")
+            .prepare("SELECT id, title, description, completed, priority, end_date FROM tasks")
             .unwrap();
         let task_row_iter = stmt
             .query_map([], |row| {
@@ -75,7 +80,7 @@ impl DB {
 
     pub fn get_task_by_id(&self, task_id: i32) -> Result<Task> {
         let mut stmt = self.connection.prepare(
-            "SELECT id, title, description, completed, priority FROM tasks where id = ?1",
+            "SELECT id, title, description, completed, priority, end_date FROM tasks where id = ?1",
         )?;
         stmt.query_row(params![task_id], |row| {
             Task::try_from(row)
@@ -86,7 +91,7 @@ impl DB {
     pub fn get_all_task_by_highest_priority(&self) -> Vec<Task> {
         let mut stmt = self
             .connection
-            .prepare("SELECT id, title, description, completed, priority FROM tasks order by priority desc")
+            .prepare("SELECT id, title, description, completed, priority, end_date FROM tasks order by priority desc")
             .unwrap();
         let task_row_iter = stmt
             .query_map([], |row| {
@@ -104,7 +109,7 @@ impl DB {
     pub fn get_all_task_by_lowest_priority(&self) -> Vec<Task> {
         let mut stmt = self
             .connection
-            .prepare("SELECT id, title, description, completed, priority FROM tasks order by priority asc")
+            .prepare("SELECT id, title, description, completed, priority, end_date FROM tasks order by priority asc")
             .unwrap();
         let task_row_iter = stmt
             .query_map([], |row| {
@@ -185,8 +190,31 @@ impl TryFrom<&Row<'_>> for Task {
             title: row.get(1)?,
             description: row.get(2)?,
             completed: row.get(3)?,
-            priority: Priority::from_u8(row.get(4)?).unwrap(),
-            date: Some(String::from("30-09-24")),
+            priority: Priority::from_u8(row.get(4)?).expect("Invalid priority"),
+            date: Date::column_result(row.get_ref(5)?).unwrap_or(Date(None)),
         })
+    }
+}
+
+impl FromSql for Date {
+    fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
+        match value {
+            ValueRef::Null => Ok(Date(None)),
+            ValueRef::Text(text) => {
+                let date_str = std::str::from_utf8(text).unwrap();
+                let date = NaiveDate::parse_from_str(date_str, DATE_FORMAT).unwrap();
+                Ok(Date(Some(date)))
+            }
+            _ => Err(rusqlite::types::FromSqlError::InvalidType.into()),
+        }
+    }
+}
+
+impl ToSql for Date {
+    fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
+        match self.0 {
+            Some(date) => Ok(ToSqlOutput::from(date.format(DATE_FORMAT).to_string())),
+            None => Ok(ToSqlOutput::from(rusqlite::types::Null)),
+        }
     }
 }

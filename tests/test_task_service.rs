@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod test {
+    use task_rustler::date::Date;
     use task_rustler::task::{Priority, Task};
     use task_rustler::task_manager::SortOrder;
     use task_rustler::task_manager::TasksService;
@@ -13,7 +14,7 @@ mod test {
                 description: "First task".to_string(),
                 completed: false,
                 priority: Priority::Low,
-                date: None,
+                date: Date::try_from("19-11-1976".to_string()).unwrap(),
             },
             Task {
                 id: 2,
@@ -21,7 +22,7 @@ mod test {
                 description: "Second task".to_string(),
                 completed: false,
                 priority: Priority::Medium,
-                date: None,
+                date: Date(None),
             },
             Task {
                 id: 3,
@@ -29,7 +30,7 @@ mod test {
                 description: "Third task".to_string(),
                 completed: false,
                 priority: Priority::High,
-                date: None,
+                date: Date::try_from("19-11-1976".to_string()).unwrap(),
             },
         ];
         for t in tasks_to_add {
@@ -93,7 +94,7 @@ mod test {
                 description: "Third task".to_string(),
                 completed: false,
                 priority: Priority::High,
-                date: None,
+                date: Date::try_from("19-11-1976".to_string()).unwrap(),
             }
         );
     }
@@ -110,7 +111,7 @@ mod test {
                 description: "First task".to_string(),
                 completed: false,
                 priority: Priority::Low,
-                date: None,
+                date: Date::try_from("19-11-1976".to_string()).unwrap(),
             }
         );
     }

@@ -147,8 +147,8 @@ impl From<&Task> for ListItem<'_> {
                 format!(" ({})", value.priority),
                 Style::default().fg(priority_to_color(&value.priority)),
             ),
-            Span::styled(format!("{:>10}",
-                                 value.date.clone().unwrap_or(format!("{}", " ".repeat(6)))), Style::default()),
+            Span::styled(format!("{:>14}",
+                                 value.date.clone().try_into().unwrap_or(format!("{}", " ".repeat(10)))), Style::default()),
             Span::styled(
                 format!("    {} - {}", value.title, value.description),
                 Style::default().fg(TEXT_FG_COLOR),
@@ -160,8 +160,8 @@ impl From<&Task> for ListItem<'_> {
                 format!(" ({})", value.priority),
                 Style::default().fg(priority_to_color(&value.priority)),
             ),
-            Span::styled(format!("{:>10}",
-                                 value.date.clone().unwrap_or(format!("{}", " ".repeat(6)))), Style::default()),
+            Span::styled(format!("{:>14}",
+                                 value.date.clone().try_into().unwrap_or(format!("{}", " ".repeat(10)))), Style::default()),
             Span::styled(
                 format!("    {} - {}", value.title, value.description),
                 Style::default().fg(COMPLETED_TEXT_FG_COLOR),
