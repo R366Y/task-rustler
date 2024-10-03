@@ -8,7 +8,7 @@ use task_rustler::command::*;
 use task_rustler::ui;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let mut app = App::new();
+    let mut app = App::new(String::from("tasks.db"));
     app.refresh_task_list();
     let mut terminal = ratatui::init();
     let res = run_app(&mut terminal, app);
@@ -35,7 +35,7 @@ fn run_app<B: ratatui::backend::Backend>(
             match app.input_mode {
                 InputMode::Normal => match key.code {
                     KeyCode::Char('e') => {
-                        EnterEditModeCommand.execute(&mut app);
+                        let _ = EnterEditModeCommand.execute(&mut app);
                     }
                     KeyCode::Char('q') => {
                         return Ok(());
@@ -47,26 +47,26 @@ fn run_app<B: ratatui::backend::Backend>(
                         app.select_previous();
                     }
                     KeyCode::Char(' ') => {
-                        ToggleTaskStatusCommand.execute(&mut app);
+                        let _ = ToggleTaskStatusCommand.execute(&mut app);
                     }
                     KeyCode::Char('m') => {
-                        StartEditingExistingTaskCommand.execute(&mut app);
+                        let _ = StartEditingExistingTaskCommand.execute(&mut app);
                     }
                     KeyCode::Char('p') => {
-                        ToggleItemPriorityCommand.execute(&mut app);
+                        let _ = ToggleItemPriorityCommand.execute(&mut app);
                     }
                     KeyCode::Char('s') => {
                         app.sort_by_priority();
                     }
                     KeyCode::Char('d') => {
-                        DeleteTaskCommand.execute(&mut app);
+                        let _ = DeleteTaskCommand.execute(&mut app);
                     }
                     _ => {}
                 },
                 InputMode::Editing => match key.code {
                     KeyCode::Enter => {
                         if !app.input_title.is_empty() {
-                            AddTaskCommand.execute(&mut app);
+                            let _ = AddTaskCommand.execute(&mut app);
                         }
                         app.input_mode = InputMode::Normal;
                     }
@@ -88,7 +88,7 @@ fn run_app<B: ratatui::backend::Backend>(
                         }
                     },
                     KeyCode::Esc => {
-                        StopEditingCommand.execute(&mut app);
+                        let _ = StopEditingCommand.execute(&mut app);
                     }
                     _ => {}
                 },
@@ -96,7 +96,7 @@ fn run_app<B: ratatui::backend::Backend>(
                     KeyCode::Tab => app.next_input_field(),
                     KeyCode::Enter => {
                         if !app.input_title.is_empty() {
-                            FinishEditingExistingTaskCommand.execute(&mut app);
+                            let _ = FinishEditingExistingTaskCommand.execute(&mut app);
                         }
                     }
                     KeyCode::Char(c) => match app.input_field {
@@ -116,7 +116,7 @@ fn run_app<B: ratatui::backend::Backend>(
                         }
                     },
                     KeyCode::Esc => {
-                        StopEditingCommand.execute(&mut app);
+                        let _ = StopEditingCommand.execute(&mut app);
                     }
                     _ => {}
                 },

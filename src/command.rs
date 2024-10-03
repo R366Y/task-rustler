@@ -1,7 +1,7 @@
 use crate::app::{App, InputField, InputMode};
 use crate::date::{Date, DATE_FORMAT};
 use crate::task::Task;
-use anyhow::Result;
+use anyhow::{Context, Result};
 
 pub trait Command {
     fn execute(&mut self, app: &mut App)-> Result<()>;
@@ -26,7 +26,7 @@ impl Command for AddTaskCommand {
         t.title = app.input_title.drain(..).collect();
         t.description = app.input_description.drain(..).collect();
         if !app.input_date.is_empty() {
-            t.date = Date::try_from(app.input_date.drain(..).collect::<String>())?;
+            t.date = Date::try_from(app.input_date.drain(..).collect::<String>()).context("Invalid date")?;
         }
         app.tasks_service.add_new_task(&t);
         app.refresh_task_list();

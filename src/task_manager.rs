@@ -15,7 +15,7 @@ pub struct TasksService {
 
 impl Default for TasksService {
     fn default() -> Self {
-        Self::new(&String::new())
+        Self::new(String::new())
     }
 }
 
@@ -24,10 +24,10 @@ impl TasksService {
     /// `db_path` is the path to the database file. If it doesn't exist it is going to be created.
     /// If db_path is an empty string __""__, an in memory instance of database is going to be
     /// created instead.
-    pub fn new(db_path: &String) -> Self {
+    pub fn new(db_path: String) -> Self {
         Self {
-            db: DB::create_and_return_connection(db_path),
-            db_filename: db_path.to_string(),
+            db: DB::create_and_return_connection(db_path.as_str()),
+            db_filename: db_path,
         }
     }
 

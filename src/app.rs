@@ -39,7 +39,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn new() -> App {
+    pub fn new(db_path: String) -> App {
         App {
             task_list: TaskList::new(),
             input_title: String::new(),
@@ -47,7 +47,7 @@ impl App {
             input_date: String::new(),
             input_mode: InputMode::Normal,
             input_field: InputField::Title,
-            tasks_service: TasksService::new(&"tasks.db".to_string()),
+            tasks_service: TasksService::new(db_path),
         }
     }
 

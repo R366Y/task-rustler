@@ -57,6 +57,7 @@ mod test {
         assert_eq!(task.id, 4);
         assert_eq!(task.description, "Test task description");
         assert_eq!(task.completed, false);
+        assert!(task.date.0.is_none());
     }
     #[test]
     fn should_return_none_if_task_is_not_found() {
