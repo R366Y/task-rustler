@@ -65,7 +65,7 @@ fn run_app<B: ratatui::backend::Backend>(
                 },
                 InputMode::Editing => match key.code {
                     KeyCode::Enter => {
-                        if !app.input_description.is_empty() {
+                        if !app.input_title.is_empty() {
                             AddTaskCommand.execute(&mut app);
                         }
                         app.input_mode = InputMode::Normal;
@@ -95,7 +95,9 @@ fn run_app<B: ratatui::backend::Backend>(
                 InputMode::EditingExisting => match key.code {
                     KeyCode::Tab => app.next_input_field(),
                     KeyCode::Enter => {
-                        FinishEditingExistingTaskCommand.execute(&mut app);
+                        if !app.input_title.is_empty() {
+                            FinishEditingExistingTaskCommand.execute(&mut app);
+                        }
                     }
                     KeyCode::Char(c) => match app.input_field {
                         InputField::Title => app.input_title.push(c),

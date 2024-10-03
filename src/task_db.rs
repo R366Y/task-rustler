@@ -151,8 +151,8 @@ impl DB {
     pub fn update_task(&self, task: &Task) -> usize {
         self.connection
             .execute(
-                "UPDATE tasks SET title = ?2, description = ?3 WHERE id = ?1",
-                params![task.id, task.title, task.description],
+                "UPDATE tasks SET title = ?2, description = ?3, end_date=?4 WHERE id = ?1",
+                params![task.id, task.title, task.description, task.date],
             )
             .context("Can't update the task.")
             .unwrap()

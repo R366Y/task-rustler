@@ -1,5 +1,5 @@
 use crate::app::{App, InputField, InputMode};
-use crate::date::Date;
+use crate::date::{Date, DATE_FORMAT};
 use crate::task::Task;
 use anyhow::Result;
 
@@ -25,7 +25,9 @@ impl Command for AddTaskCommand {
         let mut t = Task::new();
         t.title = app.input_title.drain(..).collect();
         t.description = app.input_description.drain(..).collect();
-        t.date = Date::try_from(app.input_date.drain(..).collect::<String>())?;
+        if !app.input_date.is_empty() {
+            t.date = Date::try_from(app.input_date.drain(..).collect::<String>())?;
+        }
         app.tasks_service.add_new_task(&t);
         app.refresh_task_list();
         Ok(())
@@ -74,7 +76,9 @@ impl Command for StartEditingExistingTaskCommand {
         if let Some(index) = app.task_list.state.selected() {
             app.input_title = app.task_list.items[index].title.clone();
             app.input_description = app.task_list.items[index].description.clone();
-            app.input_date = app.task_list.items[index].date.clone().0.map(|d| d.to_string()).unwrap_or(String::new());
+            app.input_date = app.task_list.items[index].date.clone().0.map(
+                |d| d.format(DATE_FORMAT).to_string())
+                .unwrap_or(String::new());
             app.input_mode = InputMode::EditingExisting;
             app.input_field = InputField::Title;
         }
@@ -90,7 +94,11 @@ impl Command for FinishEditingExistingTaskCommand {
         if let Some(index) = app.task_list.state.selected() {
             app.task_list.items[index].title = app.input_title.drain(..).collect();
             app.task_list.items[index].description = app.input_description.drain(..).collect();
-            app.task_list.items[index].date = Date::try_from(app.input_date.drain(..).collect::<String>())?;
+            if !app.input_date.is_empty() {
+                app.task_list.items[index].date = Date::try_from(app.input_date.drain(..).collect::<String>())?;
+            } else {
+                app.task_list.items[index].date = Date(None)
+            }
             app.tasks_service.update_task(&app.task_list.items[index])
         }
         app.input_mode = InputMode::Normal;
@@ -119,6 +127,7 @@ impl Command for StopEditingCommand {
         app.input_mode = InputMode::Normal;
         app.input_title.clear();
         app.input_description.clear();
+        app.input_date.clear();
         Ok(())
     }
 }
