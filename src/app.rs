@@ -1,4 +1,4 @@
-use crate::task::{Priority, Task};
+use crate::task::Task;
 use crate::task_manager::TasksService;
 use ratatui::widgets::ListState;
 
@@ -25,49 +25,30 @@ pub enum InputMode {
 pub enum InputField {
     Title,
     Description,
-    //sDate,
+    Date,
 }
 
 pub struct App {
     pub task_list: TaskList,
     pub input_title: String,
     pub input_description: String,
+    pub input_date: String,
     pub input_mode: InputMode,
     pub input_field: InputField,
     pub tasks_service: TasksService,
 }
 
 impl App {
-    pub fn new() -> App {
+    pub fn new(db_path: String) -> App {
         App {
             task_list: TaskList::new(),
             input_title: String::new(),
             input_description: String::new(),
+            input_date: String::new(),
             input_mode: InputMode::Normal,
             input_field: InputField::Title,
-            tasks_service: TasksService::new(&"tasks.db".to_string()),
+            tasks_service: TasksService::new(db_path),
         }
-    }
-
-    pub fn test() -> App {
-        let mut app = App::new();
-        app.task_list.items = vec![
-            Task {
-                id: 0,
-                title: "Task 1 title".to_string(),
-                description: "Task 1".to_string(),
-                completed: true,
-                priority: Priority::Low,
-            },
-            Task {
-                id: 1,
-                title: "Task 2 title".to_string(),
-                description: "Task 2".to_string(),
-                completed: false,
-                priority: Priority::High,
-            },
-        ];
-        app
     }
 
     pub fn sort_by_priority(&mut self) {
@@ -103,8 +84,8 @@ impl App {
     pub fn next_input_field(&mut self) {
         self.input_field = match self.input_field {
             InputField::Title => InputField::Description,
-            //InputField::Description => InputField::Date,
-            InputField::Description => InputField::Title,
+            InputField::Description => InputField::Date,
+            InputField::Date => InputField::Title,
         }
     }
 }

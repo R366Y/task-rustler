@@ -13,8 +13,9 @@ const TEXT_FG_COLOR: Color = SLATE.c200;
 const COMPLETED_TEXT_FG_COLOR: Color = SLATE.c500;
 
 pub fn ui(f: &mut Frame, app: &mut App) {
-    let [main_area, input_title_area, input_description_area, message_area] = Layout::vertical([
+    let [main_area, input_title_area, input_description_area, input_date_area, message_area] = Layout::vertical([
         Constraint::Min(1),
+        Constraint::Length(3),
         Constraint::Length(3),
         Constraint::Length(3),
         Constraint::Length(1),
@@ -28,11 +29,13 @@ pub fn ui(f: &mut Frame, app: &mut App) {
             let input_area = match app.input_field {
                 InputField::Title => input_title_area,
                 InputField::Description => input_description_area,
+                InputField::Date => input_date_area,
             };
             let x = input_area.x
                 + match app.input_field {
                     InputField::Title => app.input_title.len() as u16,
                     InputField::Description => app.input_description.len() as u16,
+                    InputField::Date => app.input_date.len() as u16,
                 }
                 + 1;
             let y = input_area.y + 1;
@@ -43,6 +46,7 @@ pub fn ui(f: &mut Frame, app: &mut App) {
     render_list(f, app, main_area);
     render_input_title_area(f, app, input_title_area);
     render_input_description_area(f, app, input_description_area);
+    render_input_date_area(f, app, input_date_area);
     render_message_area(f, app, message_area);
 }
 
@@ -72,28 +76,17 @@ fn render_list(f: &mut Frame, app: &mut App, area: Rect) {
 }
 
 fn render_input_title_area(f: &mut Frame, app: &mut App, area: Rect) {
-    let input = Paragraph::new(app.input_title.as_str())
-        .style(match app.input_mode {
-            InputMode::Normal => Style::default(),
-            InputMode::Editing => Style::default().fg(Color::Yellow),
-            InputMode::EditingExisting => Style::default().fg(Color::Cyan),
-        })
-        .block(Block::default().borders(Borders::BOTTOM).title("Title"));
+    let input = create_input_paragraph(app, app.input_title.as_str(), "Title");
     f.render_widget(input, area);
 }
 
 fn render_input_description_area(f: &mut Frame, app: &mut App, area: Rect) {
-    let input = Paragraph::new(app.input_description.as_str())
-        .style(match app.input_mode {
-            InputMode::Normal => Style::default(),
-            InputMode::Editing => Style::default().fg(Color::Yellow),
-            InputMode::EditingExisting => Style::default().fg(Color::Cyan),
-        })
-        .block(
-            Block::default()
-                .borders(Borders::BOTTOM)
-                .title("Description"),
-        );
+    let input = create_input_paragraph(app, app.input_description.as_str(), "Description");
+    f.render_widget(input, area);
+}
+
+fn render_input_date_area(f: &mut Frame, app: &mut App, area: Rect) {
+    let input = create_input_paragraph(app, app.input_date.as_str(), "Date (dd-mm-yy)");
     f.render_widget(input, area);
 }
 
@@ -154,8 +147,10 @@ impl From<&Task> for ListItem<'_> {
                 format!(" ({})", value.priority),
                 Style::default().fg(priority_to_color(&value.priority)),
             ),
+            Span::styled(format!("{:>14}",
+                                 value.date.clone().try_into().unwrap_or(format!("{}", " ".repeat(10)))), Style::default()),
             Span::styled(
-                format!(" {} - {}", value.title, value.description),
+                format!("    {} - {}", value.title, value.description),
                 Style::default().fg(TEXT_FG_COLOR),
             ),
         ];
@@ -165,8 +160,10 @@ impl From<&Task> for ListItem<'_> {
                 format!(" ({})", value.priority),
                 Style::default().fg(priority_to_color(&value.priority)),
             ),
+            Span::styled(format!("{:>14}",
+                                 value.date.clone().try_into().unwrap_or(format!("{}", " ".repeat(10)))), Style::default()),
             Span::styled(
-                format!(" {} - {}", value.title, value.description),
+                format!("    {} - {}", value.title, value.description),
                 Style::default().fg(COMPLETED_TEXT_FG_COLOR),
             ),
         ];
@@ -184,4 +181,18 @@ fn priority_to_color(priority: &Priority) -> Color {
         Priority::Medium => Color::Yellow,
         Priority::High => Color::Red,
     }
+}
+
+fn create_input_paragraph<'a>(app: &'a App, text: &'a str, title: &'a str) -> Paragraph<'a> {
+    Paragraph::new(text)
+        .style(match app.input_mode {
+            InputMode::Normal => Style::default(),
+            InputMode::Editing => Style::default().fg(Color::Yellow),
+            InputMode::EditingExisting => Style::default().fg(Color::Cyan),
+        })
+        .block(
+            Block::default()
+                .borders(Borders::BOTTOM)
+                .title(title),
+        )
 }

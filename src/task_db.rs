@@ -1,6 +1,9 @@
 use crate::task::{Priority, Task};
 use anyhow::{Context, Result};
-use rusqlite::{params, Connection};
+use chrono::NaiveDate;
+use rusqlite::{params, Connection, Row, ToSql};
+use rusqlite::types::{FromSql, FromSqlResult, ToSqlOutput, ValueRef};
+use crate::date::{Date, DATE_FORMAT};
 
 #[derive(Debug)]
 pub struct DB {
@@ -33,7 +36,8 @@ impl DB {
             title TEXT NOT NULL,
             description TEXT NOT NULL,
             completed BOOLEAN NOT NULL,
-            priority INTEGER NOT NULL
+            priority INTEGER NOT NULL,
+            end_date DATE
         )",
                 [],
             )
@@ -44,32 +48,13 @@ impl DB {
     pub fn insert_task(&self, task: &Task) {
         self.connection
             .execute(
-                "INSERT INTO tasks (title, description, completed, priority) VALUES (?1,?2, 0, ?3)",
+                "INSERT INTO tasks (title, description, completed, priority, end_date) VALUES (?1, ?2, 0, ?3, ?4)",
                 params![
                     task.title.trim(),
                     task.description.trim(),
-                    task.priority.to_usize()
+                    task.priority.to_usize(),
+                    task.date,
                 ],
-            )
-            .context("Can't add task to DB.")
-            .unwrap();
-    }
-
-    pub fn add_task_description(&self, description: &str) {
-        self.connection
-            .execute(
-                "INSERT INTO tasks (title, description, completed, priority) VALUES (?1,?2, 0, 2)",
-                params![" ", description.trim()],
-            )
-            .context("Can't add task to DB.")
-            .unwrap();
-    }
-
-    pub fn add_task_with_priority(&self, description: &str, priority: Priority) {
-        self.connection
-            .execute(
-                "INSERT INTO tasks (title, description, completed, priority) VALUES (?1,?2, 0, ?3)",
-                params![" ", description.trim(), priority as u8],
             )
             .context("Can't add task to DB.")
             .unwrap();
@@ -78,17 +63,11 @@ impl DB {
     pub fn get_all_tasks(&self) -> Vec<Task> {
         let mut stmt = self
             .connection
-            .prepare("SELECT id, title, description, completed, priority FROM tasks")
+            .prepare("SELECT id, title, description, completed, priority, end_date FROM tasks")
             .unwrap();
         let task_row_iter = stmt
             .query_map([], |row| {
-                Ok(Task {
-                    id: row.get(0)?,
-                    title: row.get(1)?,
-                    description: row.get(2)?,
-                    completed: row.get(3)?,
-                    priority: Priority::from_u8(row.get(4)?).unwrap(),
-                })
+                Task::try_from(row)
             })
             .context("Can't get results from DB.")
             .unwrap();
@@ -101,16 +80,10 @@ impl DB {
 
     pub fn get_task_by_id(&self, task_id: i32) -> Result<Task> {
         let mut stmt = self.connection.prepare(
-            "SELECT id, title, description, completed, priority FROM tasks where id = ?1",
+            "SELECT id, title, description, completed, priority, end_date FROM tasks where id = ?1",
         )?;
         stmt.query_row(params![task_id], |row| {
-            Ok(Task {
-                id: row.get(0)?,
-                title: row.get(1)?,
-                description: row.get(2)?,
-                completed: row.get(3)?,
-                priority: Priority::from_u8(row.get(4)?).unwrap(),
-            })
+            Task::try_from(row)
         })
         .with_context(|| format!("Couldn't get task at index {task_id}"))
     }
@@ -118,17 +91,11 @@ impl DB {
     pub fn get_all_task_by_highest_priority(&self) -> Vec<Task> {
         let mut stmt = self
             .connection
-            .prepare("SELECT id, title, description, completed, priority FROM tasks order by priority desc")
+            .prepare("SELECT id, title, description, completed, priority, end_date FROM tasks order by priority desc")
             .unwrap();
         let task_row_iter = stmt
             .query_map([], |row| {
-                Ok(Task {
-                    id: row.get(0)?,
-                    title: row.get(1)?,
-                    description: row.get(2)?,
-                    completed: row.get(3)?,
-                    priority: Priority::from_u8(row.get(4)?).unwrap(),
-                })
+                Task::try_from(row)
             })
             .context("Couldn't get results from DB.")
             .unwrap();
@@ -142,17 +109,11 @@ impl DB {
     pub fn get_all_task_by_lowest_priority(&self) -> Vec<Task> {
         let mut stmt = self
             .connection
-            .prepare("SELECT id, title, description, completed, priority FROM tasks order by priority asc")
+            .prepare("SELECT id, title, description, completed, priority, end_date FROM tasks order by priority asc")
             .unwrap();
         let task_row_iter = stmt
             .query_map([], |row| {
-                Ok(Task {
-                    id: row.get(0)?,
-                    title: row.get(1)?,
-                    description: row.get(2)?,
-                    completed: row.get(3)?,
-                    priority: Priority::from_u8(row.get(4)?).unwrap(),
-                })
+                Task::try_from(row)
             })
             .context("Couldn't get results from DB.")
             .unwrap();
@@ -190,8 +151,8 @@ impl DB {
     pub fn update_task(&self, task: &Task) -> usize {
         self.connection
             .execute(
-                "UPDATE tasks SET title = ?2, description = ?3 WHERE id = ?1",
-                params![task.id, task.title, task.description],
+                "UPDATE tasks SET title = ?2, description = ?3, end_date=?4 WHERE id = ?1",
+                params![task.id, task.title, task.description, task.date],
             )
             .context("Can't update the task.")
             .unwrap()
@@ -217,5 +178,43 @@ impl DB {
             .execute("DELETE FROM tasks", [])
             .context("Can't clear database")
             .unwrap()
+    }
+}
+
+impl TryFrom<&Row<'_>> for Task {
+    type Error = rusqlite::Error;
+
+    fn try_from(row: &Row<'_>) -> rusqlite::Result<Self, Self::Error> {
+        Ok(Task {
+            id: row.get(0)?,
+            title: row.get(1)?,
+            description: row.get(2)?,
+            completed: row.get(3)?,
+            priority: Priority::from_u8(row.get(4)?).expect("Invalid priority"),
+            date: Date::column_result(row.get_ref(5)?).unwrap_or(Date(None)),
+        })
+    }
+}
+
+impl FromSql for Date {
+    fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
+        match value {
+            ValueRef::Null => Ok(Date(None)),
+            ValueRef::Text(text) => {
+                let date_str = std::str::from_utf8(text).unwrap();
+                let date = NaiveDate::parse_from_str(date_str, DATE_FORMAT).unwrap();
+                Ok(Date(Some(date)))
+            }
+            _ => Err(rusqlite::types::FromSqlError::InvalidType.into()),
+        }
+    }
+}
+
+impl ToSql for Date {
+    fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
+        match self.0 {
+            Some(date) => Ok(ToSqlOutput::from(date.format(DATE_FORMAT).to_string())),
+            None => Ok(ToSqlOutput::from(rusqlite::types::Null)),
+        }
     }
 }

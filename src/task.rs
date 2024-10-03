@@ -1,5 +1,6 @@
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
+use crate::date::Date;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Priority {
@@ -75,6 +76,7 @@ pub struct Task {
     pub description: String,
     pub completed: bool,
     pub priority: Priority,
+    pub date: Date,
 }
 
 impl Default for Task {
@@ -94,6 +96,7 @@ impl Task {
             description: String::new(),
             completed: false,
             priority: Priority::Low,
+            date: Date(None),
         }
     }
 }
