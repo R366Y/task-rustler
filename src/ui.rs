@@ -13,19 +13,28 @@ const TEXT_FG_COLOR: Color = SLATE.c200;
 const COMPLETED_TEXT_FG_COLOR: Color = SLATE.c500;
 
 pub fn ui(f: &mut Frame, app: &mut App) {
-    let [main_area, input_title_area, input_description_area, input_date_area, message_area] = Layout::vertical([
-        Constraint::Min(1),
-        Constraint::Length(3),
-        Constraint::Length(3),
-        Constraint::Length(3),
-        Constraint::Length(1),
-    ])
-    .margin(2)
-    .areas(f.area());
-
     match app.input_mode {
-        InputMode::Normal => {}
+        InputMode::Normal => {
+            let [main_area, message_area] = Layout::vertical([
+                Constraint::Min(1),
+                Constraint::Length(1),
+            ])
+                .margin(1)
+                .areas(f.area());
+            render_list(f, app, main_area);
+            render_message_area(f, app, message_area);
+        }
         InputMode::Editing | InputMode::EditingExisting => {
+            let [main_area, input_title_area, input_description_area, input_date_area, message_area] = Layout::vertical([
+                Constraint::Min(1),
+                Constraint::Length(3),
+                Constraint::Length(3),
+                Constraint::Length(3),
+                Constraint::Length(1),
+            ])
+                .margin(1)
+                .areas(f.area());
+
             let input_area = match app.input_field {
                 InputField::Title => input_title_area,
                 InputField::Description => input_description_area,
@@ -39,15 +48,15 @@ pub fn ui(f: &mut Frame, app: &mut App) {
                 }
                 + 1;
             let y = input_area.y + 1;
-            f.set_cursor_position(Position::new(x, y))
+            f.set_cursor_position(Position::new(x, y));
+
+            render_list(f, app, main_area);
+            render_input_title_area(f, app, input_title_area);
+            render_input_description_area(f, app, input_description_area);
+            render_input_date_area(f, app, input_date_area);
+            render_message_area(f, app, message_area);
         }
     }
-
-    render_list(f, app, main_area);
-    render_input_title_area(f, app, input_title_area);
-    render_input_description_area(f, app, input_description_area);
-    render_input_date_area(f, app, input_date_area);
-    render_message_area(f, app, message_area);
 }
 
 fn render_list(f: &mut Frame, app: &mut App, area: Rect) {
