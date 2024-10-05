@@ -88,4 +88,18 @@ impl App {
             InputField::Date => InputField::Title,
         }
     }
+
+    pub fn handle_backspace(&mut self) {
+        match self.input_field {
+            InputField::Title => {
+                self.input_title.pop();
+            }
+            InputField::Description => {
+                self.input_description.pop();
+            }
+            InputField::Date => {
+                self.input_date.pop();
+            }
+        }
+    }
 }

@@ -34,93 +34,89 @@ fn run_app<B: ratatui::backend::Backend>(
             }
             match app.input_mode {
                 InputMode::Normal => match key.code {
-                    KeyCode::Char('e') => {
-                        let _ = EnterEditModeCommand.execute(&mut app);
-                    }
                     KeyCode::Char('q') => {
                         return Ok(());
-                    }
-                    KeyCode::Down => {
-                        app.select_next();
-                    }
-                    KeyCode::Up => {
-                        app.select_previous();
-                    }
-                    KeyCode::Char(' ') => {
-                        let _ = ToggleTaskStatusCommand.execute(&mut app);
-                    }
-                    KeyCode::Char('m') => {
-                        let _ = StartEditingExistingTaskCommand.execute(&mut app);
-                    }
-                    KeyCode::Char('p') => {
-                        let _ = ToggleItemPriorityCommand.execute(&mut app);
-                    }
-                    KeyCode::Char('s') => {
-                        app.sort_by_priority();
-                    }
-                    KeyCode::Char('d') => {
-                        let _ = DeleteTaskCommand.execute(&mut app);
-                    }
-                    _ => {}
+                    },
+                    _ => handle_key_event_normal_mode(key.code, &mut app)
                 },
-                InputMode::Editing => match key.code {
-                    KeyCode::Enter => {
-                        if !app.input_title.is_empty() {
-                            let _ = AddTaskCommand.execute(&mut app);
-                        }
-                        app.input_mode = InputMode::Normal;
-                    }
-                    KeyCode::Tab => app.next_input_field(),
-                    KeyCode::Char(c) => match app.input_field {
-                        InputField::Title => app.input_title.push(c),
-                        InputField::Description => app.input_description.push(c),
-                        InputField::Date => app.input_date.push(c),
-                    },
-                    KeyCode::Backspace => match app.input_field {
-                        InputField::Title => {
-                            app.input_title.pop();
-                        }
-                        InputField::Description => {
-                            app.input_description.pop();
-                        }
-                        InputField::Date => {
-                            app.input_date.pop();
-                        }
-                    },
-                    KeyCode::Esc => {
-                        let _ = StopEditingCommand.execute(&mut app);
-                    }
-                    _ => {}
-                },
-                InputMode::EditingExisting => match key.code {
-                    KeyCode::Tab => app.next_input_field(),
-                    KeyCode::Enter => {
-                        if !app.input_title.is_empty() {
-                            let _ = FinishEditingExistingTaskCommand.execute(&mut app);
-                        }
-                    }
-                    KeyCode::Char(c) => match app.input_field {
-                        InputField::Title => app.input_title.push(c),
-                        InputField::Description => app.input_description.push(c),
-                        InputField::Date => app.input_date.push(c),
-                    },
-                    KeyCode::Backspace => match app.input_field {
-                        InputField::Title => {
-                            app.input_title.pop();
-                        }
-                        InputField::Description => {
-                            app.input_description.pop();
-                        }
-                        InputField::Date => {
-                            app.input_date.pop();
-                        }
-                    },
-                    KeyCode::Esc => {
-                        let _ = StopEditingCommand.execute(&mut app);
-                    }
-                    _ => {}
-                },
+                InputMode::Editing => handle_key_event_editing_mode(key.code, &mut app),
+                InputMode::EditingExisting => handle_key_event_editing_existing_mode(key.code, &mut app),
             }
         }
     }
 }
+
+fn handle_key_event_normal_mode(key: KeyCode, app: &mut App) {
+    match key {
+        KeyCode::Char('e') => {
+            let _ = EnterEditModeCommand.execute(app);
+        }
+        KeyCode::Down => {
+            app.select_next();
+        }
+        KeyCode::Up => {
+            app.select_previous();
+        }
+        KeyCode::Char(' ') => {
+            let _ = ToggleTaskStatusCommand.execute(app);
+        }
+        KeyCode::Char('m') => {
+            let _ = StartEditingExistingTaskCommand.execute(app);
+        }
+        KeyCode::Char('p') => {
+            let _ = ToggleItemPriorityCommand.execute(app);
+        }
+        KeyCode::Char('s') => {
+            app.sort_by_priority();
+        }
+        KeyCode::Char('d') => {
+            let _ = DeleteTaskCommand.execute(app);
+        }
+        _ => {}
+    }
+}
+
+fn handle_key_event_editing_mode(key: KeyCode, app: &mut App) {
+    match key {
+        KeyCode::Enter => {
+            if !app.input_title.is_empty() {
+                let _ = AddTaskCommand.execute(app);
+            }
+            app.input_mode = InputMode::Normal;
+        }
+        KeyCode::Tab => app.next_input_field(),
+        KeyCode::Char(c) => match app.input_field {
+            InputField::Title => app.input_title.push(c),
+            InputField::Description => app.input_description.push(c),
+            InputField::Date => app.input_date.push(c),
+        },
+        KeyCode::Backspace => app.handle_backspace(),
+        KeyCode::Esc => {
+            let _ = StopEditingCommand.execute(app);
+        }
+        _ => {}
+    }
+}
+
+fn handle_key_event_editing_existing_mode(key: KeyCode, app: &mut App) {
+    match key{
+        KeyCode::Tab => app.next_input_field(),
+        KeyCode::Enter => {
+            if !app.input_title.is_empty() {
+                let _ = FinishEditingExistingTaskCommand.execute(app);
+            }
+        }
+        KeyCode::Char(c) => match app.input_field {
+            InputField::Title => app.input_title.push(c),
+            InputField::Description => app.input_description.push(c),
+            InputField::Date => app.input_date.push(c),
+        },
+        KeyCode::Backspace => app.handle_backspace(),
+        KeyCode::Esc => {
+            let _ = StopEditingCommand.execute(app);
+        }
+        _ => {}
+    }
+}
+
+
