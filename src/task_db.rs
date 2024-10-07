@@ -1,9 +1,9 @@
+use crate::date::{TaskDate, DATE_FORMAT};
 use crate::task::{Priority, Task};
 use anyhow::{Context, Result};
 use chrono::NaiveDate;
-use rusqlite::{params, Connection, Row, ToSql};
 use rusqlite::types::{FromSql, FromSqlResult, ToSqlOutput, ValueRef};
-use crate::date::{Date, DATE_FORMAT};
+use rusqlite::{params, Connection, Row, ToSql};
 
 #[derive(Debug)]
 pub struct DB {
@@ -66,9 +66,7 @@ impl DB {
             .prepare("SELECT id, title, description, completed, priority, end_date FROM tasks")
             .unwrap();
         let task_row_iter = stmt
-            .query_map([], |row| {
-                Task::try_from(row)
-            })
+            .query_map([], |row| Task::try_from(row))
             .context("Can't get results from DB.")
             .unwrap();
         let mut tasks = Vec::new();
@@ -82,10 +80,8 @@ impl DB {
         let mut stmt = self.connection.prepare(
             "SELECT id, title, description, completed, priority, end_date FROM tasks where id = ?1",
         )?;
-        stmt.query_row(params![task_id], |row| {
-            Task::try_from(row)
-        })
-        .with_context(|| format!("Couldn't get task at index {task_id}"))
+        stmt.query_row(params![task_id], |row| Task::try_from(row))
+            .with_context(|| format!("Couldn't get task at index {task_id}"))
     }
 
     pub fn get_all_task_by_highest_priority(&self) -> Vec<Task> {
@@ -94,9 +90,7 @@ impl DB {
             .prepare("SELECT id, title, description, completed, priority, end_date FROM tasks order by priority desc")
             .unwrap();
         let task_row_iter = stmt
-            .query_map([], |row| {
-                Task::try_from(row)
-            })
+            .query_map([], |row| Task::try_from(row))
             .context("Couldn't get results from DB.")
             .unwrap();
         let mut tasks = Vec::new();
@@ -112,9 +106,7 @@ impl DB {
             .prepare("SELECT id, title, description, completed, priority, end_date FROM tasks order by priority asc")
             .unwrap();
         let task_row_iter = stmt
-            .query_map([], |row| {
-                Task::try_from(row)
-            })
+            .query_map([], |row| Task::try_from(row))
             .context("Couldn't get results from DB.")
             .unwrap();
         let mut tasks = Vec::new();
@@ -191,26 +183,26 @@ impl TryFrom<&Row<'_>> for Task {
             description: row.get(2)?,
             completed: row.get(3)?,
             priority: Priority::from_u8(row.get(4)?).expect("Invalid priority"),
-            date: Date::column_result(row.get_ref(5)?).unwrap_or(Date(None)),
+            date: TaskDate::column_result(row.get_ref(5)?).unwrap_or(TaskDate(None)),
         })
     }
 }
 
-impl FromSql for Date {
+impl FromSql for TaskDate {
     fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
         match value {
-            ValueRef::Null => Ok(Date(None)),
+            ValueRef::Null => Ok(TaskDate(None)),
             ValueRef::Text(text) => {
                 let date_str = std::str::from_utf8(text).unwrap();
                 let date = NaiveDate::parse_from_str(date_str, DATE_FORMAT).unwrap();
-                Ok(Date(Some(date)))
+                Ok(TaskDate(Some(date)))
             }
             _ => Err(rusqlite::types::FromSqlError::InvalidType.into()),
         }
     }
 }
 
-impl ToSql for Date {
+impl ToSql for TaskDate {
     fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
         match self.0 {
             Some(date) => Ok(ToSqlOutput::from(date.format(DATE_FORMAT).to_string())),

@@ -14,8 +14,9 @@
 
 --- 
 ### Commands
-
-- __e__ insert a new task
+- __h__ help
+![help popup](/pics/help.png)
+- __a__ insert a new task
 ![insert task](/pics/add_task.png)
 - __m__ modify selected task
 ![modify task](/pics/modify_task.png)
