@@ -1,4 +1,4 @@
-use crate::date::Date;
+use crate::date::TaskDate;
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
 
@@ -36,23 +36,12 @@ impl Priority {
     }
 }
 
-impl From<&str> for Priority {
-    fn from(value: &str) -> Self {
-        match value.to_uppercase().as_str() {
-            "L" => Priority::Low,
-            "M" => Priority::Medium,
-            "H" => Priority::High,
-            _ => unreachable!("Invalid priority",),
-        }
-    }
-}
-
 impl Display for Priority {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Priority::Low => write!(f, "L"),
-            Priority::Medium => write!(f, "M"),
-            Priority::High => write!(f, "H"),
+            Priority::Low => write!(f, "↓"),
+            Priority::Medium => write!(f, "="),
+            Priority::High => write!(f, "↑"),
         }
     }
 }
@@ -76,7 +65,7 @@ pub struct Task {
     pub description: String,
     pub completed: bool,
     pub priority: Priority,
-    pub date: Date,
+    pub date: TaskDate,
 }
 
 impl Default for Task {
@@ -96,7 +85,7 @@ impl Task {
             description: String::new(),
             completed: false,
             priority: Priority::Low,
-            date: Date(None),
+            date: TaskDate(None),
         }
     }
 }

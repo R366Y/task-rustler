@@ -23,7 +23,7 @@ pub fn ui(f: &mut Frame, app: &mut App) {
             render_list(f, app, main_area);
             render_message_area(f, app, message_area);
         }
-        InputMode::Editing | InputMode::EditingExisting => {
+        InputMode::Adding | InputMode::EditingExisting => {
             let [main_area, input_title_area, input_description_area, input_date_area, message_area] =
                 Layout::vertical([
                     Constraint::Min(1),
@@ -59,7 +59,7 @@ pub fn ui(f: &mut Frame, app: &mut App) {
     }
     if app.show_popup {
         let block = Block::bordered().title("Help");
-        let area = render_popup(f.area(), 60, 80);
+        let area = render_popup(f.area(), 40, 80);
         f.render_widget(Clear, area); //this clears out the background
         f.render_widget(block, area);
 
@@ -70,7 +70,7 @@ pub fn ui(f: &mut Frame, app: &mut App) {
             .split(area);
         let t1 = Paragraph::new(vec![
             Line::raw("'q' to quit"),
-            Line::raw("'e' to add a task"),
+            Line::raw("'a' to add a task"),
             Line::raw("'m' to modify the selected task"),
             Line::raw("'d' to delete the selected task"),
             Line::raw("'p' to change the priority"),
@@ -126,30 +126,18 @@ fn render_message_area(f: &mut Frame, app: &mut App, area: Rect) {
     let (msg, style) = match app.input_mode {
         InputMode::Normal => (
             vec![
-                Span::raw("Press "),
-                Span::styled("q", Style::default().add_modifier(Modifier::BOLD)),
-                Span::raw(" to exit, "),
-                Span::styled("e", Style::default().add_modifier(Modifier::BOLD)),
-                Span::raw(" to start editing, "),
-                Span::styled("m", Style::default().add_modifier(Modifier::BOLD)),
-                Span::raw(" to modify selected, "),
-                Span::styled("p", Style::default().add_modifier(Modifier::BOLD)),
-                Span::raw(" to change priority, "),
-                Span::styled("s", Style::default().add_modifier(Modifier::BOLD)),
-                Span::raw(" to sort by priority, "),
-                Span::styled("d", Style::default().add_modifier(Modifier::BOLD)),
-                Span::raw(" to delete selected, "),
-                Span::styled("↑↓", Style::default().add_modifier(Modifier::BOLD)),
-                Span::raw(" to select, "),
-                Span::styled("Space", Style::default().add_modifier(Modifier::BOLD)),
-                Span::raw(" to toggle status."),
+                Span::styled("Display tasks", Style::default().bg(Color::White).fg(Color::Black)),
+                Span::raw("  Press "),
+                Span::styled("h", Style::default().add_modifier(Modifier::BOLD)),
+                Span::raw(" for help "),
             ],
             Style::default().add_modifier(Modifier::BOLD),
         ),
-        InputMode::Editing => (
+        InputMode::Adding => (
             if !app.is_error {
                 vec![
-                    Span::raw("Press "),
+                    Span::styled("Add task", Style::default().bg(Color::White).fg(Color::Black)),
+                    Span::raw("  Press "),
                     Span::styled("Esc", Style::default().add_modifier(Modifier::BOLD)),
                     Span::raw(" to stop editing, "),
                     Span::styled("Enter", Style::default().add_modifier(Modifier::BOLD)),
@@ -166,7 +154,8 @@ fn render_message_area(f: &mut Frame, app: &mut App, area: Rect) {
         InputMode::EditingExisting => (
             if !app.is_error {
                 vec![
-                    Span::raw("Press "),
+                    Span::styled("Edit task", Style::default().bg(Color::White).fg(Color::Black)),
+                    Span::raw("  Press "),
                     Span::styled("Esc", Style::default().add_modifier(Modifier::BOLD)),
                     Span::raw(" to cancel, "),
                     Span::styled("Enter", Style::default().add_modifier(Modifier::BOLD)),
@@ -259,8 +248,8 @@ fn create_input_paragraph<'a>(app: &'a App, text: &'a str, title: &'a str) -> Pa
     Paragraph::new(text)
         .style(match app.input_mode {
             InputMode::Normal => Style::default(),
-            InputMode::Editing => Style::default().fg(Color::Yellow),
-            InputMode::EditingExisting => Style::default().fg(Color::Cyan),
+            InputMode::Adding => Style::default().fg(Color::Green),
+            InputMode::EditingExisting => Style::default().fg(Color::Yellow),
         })
         .block(Block::default().borders(Borders::BOTTOM).title(title))
 }

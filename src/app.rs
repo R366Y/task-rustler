@@ -18,7 +18,7 @@ impl TaskList {
 #[derive(Debug)]
 pub enum InputMode {
     Normal,
-    Editing,
+    Adding,
     EditingExisting,
 }
 #[derive(Debug)]

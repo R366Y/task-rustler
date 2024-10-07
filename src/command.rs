@@ -1,5 +1,5 @@
 use crate::app::{App, InputField, InputMode};
-use crate::date::{Date, DATE_FORMAT};
+use crate::date::{TaskDate, DATE_FORMAT};
 use crate::task::Task;
 use anyhow::{Context, Result};
 
@@ -11,7 +11,7 @@ pub struct EnterEditModeCommand;
 
 impl Command for EnterEditModeCommand {
     fn execute(&mut self, app: &mut App) -> Result<()> {
-        app.input_mode = InputMode::Editing;
+        app.input_mode = InputMode::Adding;
         app.input_field = InputField::Title;
         Ok(())
     }
@@ -24,8 +24,8 @@ impl Command for AddTaskCommand {
     fn execute(&mut self, app: &mut App) -> Result<()> {
         let mut t = Task::new();
         if !app.input_date.is_empty() {
-            t.date = Date::try_from(app.input_date.drain(..).collect::<String>())
-                .context("Invalid date format")?;
+            t.date = TaskDate::try_from(app.input_date.drain(..).collect::<String>())
+                .context("Invalid date format, use dd-mm-yyyy")?;
         }
         t.title = app.input_title.drain(..).collect();
         t.description = app.input_description.drain(..).collect();
@@ -98,10 +98,10 @@ impl Command for FinishEditingExistingTaskCommand {
         if let Some(index) = app.task_list.state.selected() {
             if !app.input_date.is_empty() {
                 app.task_list.items[index].date =
-                    Date::try_from(app.input_date.drain(..).collect::<String>())
-                        .context("Invalid date format")?;
+                    TaskDate::try_from(app.input_date.drain(..).collect::<String>())
+                        .context("Invalid date format, use dd-mm-yyyy")?;
             } else {
-                app.task_list.items[index].date = Date(None)
+                app.task_list.items[index].date = TaskDate(None)
             }
             app.task_list.items[index].title = app.input_title.drain(..).collect();
             app.task_list.items[index].description = app.input_description.drain(..).collect();

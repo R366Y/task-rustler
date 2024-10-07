@@ -1,4 +1,4 @@
-use crate::date::{Date, DATE_FORMAT};
+use crate::date::{TaskDate, DATE_FORMAT};
 use crate::task::{Priority, Task};
 use anyhow::{Context, Result};
 use chrono::NaiveDate;
@@ -183,26 +183,26 @@ impl TryFrom<&Row<'_>> for Task {
             description: row.get(2)?,
             completed: row.get(3)?,
             priority: Priority::from_u8(row.get(4)?).expect("Invalid priority"),
-            date: Date::column_result(row.get_ref(5)?).unwrap_or(Date(None)),
+            date: TaskDate::column_result(row.get_ref(5)?).unwrap_or(TaskDate(None)),
         })
     }
 }
 
-impl FromSql for Date {
+impl FromSql for TaskDate {
     fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
         match value {
-            ValueRef::Null => Ok(Date(None)),
+            ValueRef::Null => Ok(TaskDate(None)),
             ValueRef::Text(text) => {
                 let date_str = std::str::from_utf8(text).unwrap();
                 let date = NaiveDate::parse_from_str(date_str, DATE_FORMAT).unwrap();
-                Ok(Date(Some(date)))
+                Ok(TaskDate(Some(date)))
             }
             _ => Err(rusqlite::types::FromSqlError::InvalidType.into()),
         }
     }
 }
 
-impl ToSql for Date {
+impl ToSql for TaskDate {
     fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
         match self.0 {
             Some(date) => Ok(ToSqlOutput::from(date.format(DATE_FORMAT).to_string())),
