@@ -1,6 +1,6 @@
+use crate::date::Date;
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
-use crate::date::Date;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Priority {

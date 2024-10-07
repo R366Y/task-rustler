@@ -1,9 +1,9 @@
+use crate::date::{Date, DATE_FORMAT};
 use crate::task::{Priority, Task};
 use anyhow::{Context, Result};
 use chrono::NaiveDate;
-use rusqlite::{params, Connection, Row, ToSql};
 use rusqlite::types::{FromSql, FromSqlResult, ToSqlOutput, ValueRef};
-use crate::date::{Date, DATE_FORMAT};
+use rusqlite::{params, Connection, Row, ToSql};
 
 #[derive(Debug)]
 pub struct DB {
@@ -66,9 +66,7 @@ impl DB {
             .prepare("SELECT id, title, description, completed, priority, end_date FROM tasks")
             .unwrap();
         let task_row_iter = stmt
-            .query_map([], |row| {
-                Task::try_from(row)
-            })
+            .query_map([], |row| Task::try_from(row))
             .context("Can't get results from DB.")
             .unwrap();
         let mut tasks = Vec::new();
@@ -82,10 +80,8 @@ impl DB {
         let mut stmt = self.connection.prepare(
             "SELECT id, title, description, completed, priority, end_date FROM tasks where id = ?1",
         )?;
-        stmt.query_row(params![task_id], |row| {
-            Task::try_from(row)
-        })
-        .with_context(|| format!("Couldn't get task at index {task_id}"))
+        stmt.query_row(params![task_id], |row| Task::try_from(row))
+            .with_context(|| format!("Couldn't get task at index {task_id}"))
     }
 
     pub fn get_all_task_by_highest_priority(&self) -> Vec<Task> {
@@ -94,9 +90,7 @@ impl DB {
             .prepare("SELECT id, title, description, completed, priority, end_date FROM tasks order by priority desc")
             .unwrap();
         let task_row_iter = stmt
-            .query_map([], |row| {
-                Task::try_from(row)
-            })
+            .query_map([], |row| Task::try_from(row))
             .context("Couldn't get results from DB.")
             .unwrap();
         let mut tasks = Vec::new();
@@ -112,9 +106,7 @@ impl DB {
             .prepare("SELECT id, title, description, completed, priority, end_date FROM tasks order by priority asc")
             .unwrap();
         let task_row_iter = stmt
-            .query_map([], |row| {
-                Task::try_from(row)
-            })
+            .query_map([], |row| Task::try_from(row))
             .context("Couldn't get results from DB.")
             .unwrap();
         let mut tasks = Vec::new();

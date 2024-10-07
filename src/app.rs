@@ -36,6 +36,9 @@ pub struct App {
     pub input_mode: InputMode,
     pub input_field: InputField,
     pub tasks_service: TasksService,
+    pub show_popup: bool,
+    pub error_message: String,
+    pub is_error: bool,
 }
 
 impl App {
@@ -48,6 +51,9 @@ impl App {
             input_mode: InputMode::Normal,
             input_field: InputField::Title,
             tasks_service: TasksService::new(db_path),
+            show_popup: false,
+            error_message: String::new(),
+            is_error: false,
         }
     }
 

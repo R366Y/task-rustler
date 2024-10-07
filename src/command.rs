@@ -4,7 +4,7 @@ use crate::task::Task;
 use anyhow::{Context, Result};
 
 pub trait Command {
-    fn execute(&mut self, app: &mut App)-> Result<()>;
+    fn execute(&mut self, app: &mut App) -> Result<()>;
 }
 
 pub struct EnterEditModeCommand;
@@ -23,11 +23,12 @@ pub struct AddTaskCommand;
 impl Command for AddTaskCommand {
     fn execute(&mut self, app: &mut App) -> Result<()> {
         let mut t = Task::new();
+        if !app.input_date.is_empty() {
+            t.date = Date::try_from(app.input_date.drain(..).collect::<String>())
+                .context("Invalid date format")?;
+        }
         t.title = app.input_title.drain(..).collect();
         t.description = app.input_description.drain(..).collect();
-        if !app.input_date.is_empty() {
-            t.date = Date::try_from(app.input_date.drain(..).collect::<String>()).context("Invalid date")?;
-        }
         app.tasks_service.add_new_task(&t);
         app.refresh_task_list();
         Ok(())
@@ -76,8 +77,11 @@ impl Command for StartEditingExistingTaskCommand {
         if let Some(index) = app.task_list.state.selected() {
             app.input_title = app.task_list.items[index].title.clone();
             app.input_description = app.task_list.items[index].description.clone();
-            app.input_date = app.task_list.items[index].date.clone().0.map(
-                |d| d.format(DATE_FORMAT).to_string())
+            app.input_date = app.task_list.items[index]
+                .date
+                .clone()
+                .0
+                .map(|d| d.format(DATE_FORMAT).to_string())
                 .unwrap_or(String::new());
             app.input_mode = InputMode::EditingExisting;
             app.input_field = InputField::Title;
@@ -92,16 +96,17 @@ pub struct FinishEditingExistingTaskCommand;
 impl Command for FinishEditingExistingTaskCommand {
     fn execute(&mut self, app: &mut App) -> Result<()> {
         if let Some(index) = app.task_list.state.selected() {
-            app.task_list.items[index].title = app.input_title.drain(..).collect();
-            app.task_list.items[index].description = app.input_description.drain(..).collect();
             if !app.input_date.is_empty() {
-                app.task_list.items[index].date = Date::try_from(app.input_date.drain(..).collect::<String>())?;
+                app.task_list.items[index].date =
+                    Date::try_from(app.input_date.drain(..).collect::<String>())
+                        .context("Invalid date format")?;
             } else {
                 app.task_list.items[index].date = Date(None)
             }
+            app.task_list.items[index].title = app.input_title.drain(..).collect();
+            app.task_list.items[index].description = app.input_description.drain(..).collect();
             app.tasks_service.update_task(&app.task_list.items[index])
         }
-        app.input_mode = InputMode::Normal;
         Ok(())
     }
 }

@@ -1,11 +1,12 @@
 use crate::app::{App, InputField, InputMode};
 use crate::task::{Priority, Task};
-use ratatui::layout::{Constraint, Layout, Position, Rect};
-use ratatui::prelude::{Color, Line, Modifier, Span, StatefulWidget, Style};
+use ratatui::layout::{Constraint, Flex, Layout, Position, Rect};
+use ratatui::prelude::{Color, Direction, Line, Modifier, Span, StatefulWidget, Style};
 use ratatui::style::palette::tailwind::{BLUE, SLATE};
 use ratatui::style::Stylize;
-use ratatui::widgets::{Block, Borders, HighlightSpacing, List, ListItem, Paragraph};
+use ratatui::widgets::{Block, Borders, Clear, HighlightSpacing, List, ListItem, Paragraph};
 use ratatui::{symbols, Frame};
+use std::vec;
 const TODO_HEADER_STYLE: Style = Style::new().fg(SLATE.c100).bg(BLUE.c800);
 const NORMAL_ROW_BG: Color = SLATE.c950;
 const SELECTED_STYLE: Style = Style::new().bg(SLATE.c800).add_modifier(Modifier::BOLD);
@@ -15,23 +16,22 @@ const COMPLETED_TEXT_FG_COLOR: Color = SLATE.c500;
 pub fn ui(f: &mut Frame, app: &mut App) {
     match app.input_mode {
         InputMode::Normal => {
-            let [main_area, message_area] = Layout::vertical([
-                Constraint::Min(1),
-                Constraint::Length(1),
-            ])
-                .margin(1)
-                .areas(f.area());
+            let [main_area, message_area] =
+                Layout::vertical([Constraint::Min(1), Constraint::Length(1)])
+                    .margin(1)
+                    .areas(f.area());
             render_list(f, app, main_area);
             render_message_area(f, app, message_area);
         }
         InputMode::Editing | InputMode::EditingExisting => {
-            let [main_area, input_title_area, input_description_area, input_date_area, message_area] = Layout::vertical([
-                Constraint::Min(1),
-                Constraint::Length(3),
-                Constraint::Length(3),
-                Constraint::Length(3),
-                Constraint::Length(1),
-            ])
+            let [main_area, input_title_area, input_description_area, input_date_area, message_area] =
+                Layout::vertical([
+                    Constraint::Min(1),
+                    Constraint::Length(3),
+                    Constraint::Length(3),
+                    Constraint::Length(3),
+                    Constraint::Length(1),
+                ])
                 .margin(1)
                 .areas(f.area());
 
@@ -56,6 +56,29 @@ pub fn ui(f: &mut Frame, app: &mut App) {
             render_input_date_area(f, app, input_date_area);
             render_message_area(f, app, message_area);
         }
+    }
+    if app.show_popup {
+        let block = Block::bordered().title("Help");
+        let area = render_popup(f.area(), 60, 80);
+        f.render_widget(Clear, area); //this clears out the background
+        f.render_widget(block, area);
+
+        let popup_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .margin(1)
+            .constraints([Constraint::Percentage(80)])
+            .split(area);
+        let t1 = Paragraph::new(vec![
+            Line::raw("'q' to quit"),
+            Line::raw("'e' to add a task"),
+            Line::raw("'m' to modify the selected task"),
+            Line::raw("'d' to delete the selected task"),
+            Line::raw("'p' to change the priority"),
+            Line::raw("'s' to sort by priority"),
+            Line::raw("'↑↓' to select task"),
+            Line::raw("'Space' to toggle status"),
+        ]);
+        f.render_widget(t1, popup_chunks[0]);
     }
 }
 
@@ -95,7 +118,7 @@ fn render_input_description_area(f: &mut Frame, app: &mut App, area: Rect) {
 }
 
 fn render_input_date_area(f: &mut Frame, app: &mut App, area: Rect) {
-    let input = create_input_paragraph(app, app.input_date.as_str(), "Date (dd-mm-yy)");
+    let input = create_input_paragraph(app, app.input_date.as_str(), "Date (dd-mm-yyyy)");
     f.render_widget(input, area);
 }
 
@@ -124,28 +147,50 @@ fn render_message_area(f: &mut Frame, app: &mut App, area: Rect) {
             Style::default().add_modifier(Modifier::BOLD),
         ),
         InputMode::Editing => (
-            vec![
-                Span::raw("Press "),
-                Span::styled("Esc", Style::default().add_modifier(Modifier::BOLD)),
-                Span::raw(" to stop editing, "),
-                Span::styled("Enter", Style::default().add_modifier(Modifier::BOLD)),
-                Span::raw(" to add new item"),
-            ],
+            if !app.is_error {
+                vec![
+                    Span::raw("Press "),
+                    Span::styled("Esc", Style::default().add_modifier(Modifier::BOLD)),
+                    Span::raw(" to stop editing, "),
+                    Span::styled("Enter", Style::default().add_modifier(Modifier::BOLD)),
+                    Span::raw(" to add new item"),
+                ]
+            } else {
+                vec![Span::styled(
+                    app.error_message.clone(),
+                    Style::default().red(),
+                )]
+            },
             Style::default(),
         ),
         InputMode::EditingExisting => (
-            vec![
-                Span::raw("Press "),
-                Span::styled("Esc", Style::default().add_modifier(Modifier::BOLD)),
-                Span::raw(" to cancel, "),
-                Span::styled("Enter", Style::default().add_modifier(Modifier::BOLD)),
-                Span::raw(" to save changes"),
-            ],
+            if !app.is_error {
+                vec![
+                    Span::raw("Press "),
+                    Span::styled("Esc", Style::default().add_modifier(Modifier::BOLD)),
+                    Span::raw(" to cancel, "),
+                    Span::styled("Enter", Style::default().add_modifier(Modifier::BOLD)),
+                    Span::raw(" to save changes"),
+                ]
+            } else {
+                vec![Span::styled(
+                    app.error_message.clone(),
+                    Style::default().red(),
+                )]
+            },
             Style::default(),
         ),
     };
     let help_message = Paragraph::new(Line::from(msg)).style(style);
     f.render_widget(help_message, area);
+}
+
+fn render_popup(area: Rect, percent_x: u16, percent_y: u16) -> Rect {
+    let vertical = Layout::vertical([Constraint::Percentage(percent_y)]).flex(Flex::Center);
+    let horizontal = Layout::horizontal([Constraint::Percentage(percent_x)]).flex(Flex::Center);
+    let [area] = vertical.areas(area);
+    let [area] = horizontal.areas(area);
+    area
 }
 
 impl From<&Task> for ListItem<'_> {
@@ -156,8 +201,17 @@ impl From<&Task> for ListItem<'_> {
                 format!(" ({})", value.priority),
                 Style::default().fg(priority_to_color(&value.priority)),
             ),
-            Span::styled(format!("{:>14}",
-                                 value.date.clone().try_into().unwrap_or(format!("{}", " ".repeat(10)))), Style::default()),
+            Span::styled(
+                format!(
+                    "{:>14}",
+                    value
+                        .date
+                        .clone()
+                        .try_into()
+                        .unwrap_or(format!("{}", " ".repeat(10)))
+                ),
+                Style::default(),
+            ),
             Span::styled(
                 format!("    {} - {}", value.title, value.description),
                 Style::default().fg(TEXT_FG_COLOR),
@@ -169,8 +223,17 @@ impl From<&Task> for ListItem<'_> {
                 format!(" ({})", value.priority),
                 Style::default().fg(priority_to_color(&value.priority)),
             ),
-            Span::styled(format!("{:>14}",
-                                 value.date.clone().try_into().unwrap_or(format!("{}", " ".repeat(10)))), Style::default()),
+            Span::styled(
+                format!(
+                    "{:>14}",
+                    value
+                        .date
+                        .clone()
+                        .try_into()
+                        .unwrap_or(format!("{}", " ".repeat(10)))
+                ),
+                Style::default(),
+            ),
             Span::styled(
                 format!("    {} - {}", value.title, value.description),
                 Style::default().fg(COMPLETED_TEXT_FG_COLOR),
@@ -199,9 +262,5 @@ fn create_input_paragraph<'a>(app: &'a App, text: &'a str, title: &'a str) -> Pa
             InputMode::Editing => Style::default().fg(Color::Yellow),
             InputMode::EditingExisting => Style::default().fg(Color::Cyan),
         })
-        .block(
-            Block::default()
-                .borders(Borders::BOTTOM)
-                .title(title),
-        )
+        .block(Block::default().borders(Borders::BOTTOM).title(title))
 }
