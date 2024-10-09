@@ -47,7 +47,7 @@ fn run_app<B: ratatui::backend::Backend>(
                     }
                     _ => handle_key_event_normal_mode(key.code, &mut app),
                 },
-                InputMode::Adding => handle_key_event_editing_mode(key.code, &mut app),
+                InputMode::Adding => handle_key_event_adding_mode(key.code, &mut app),
                 InputMode::EditingExisting => {
                     handle_key_event_editing_existing_mode(key.code, &mut app)
                 }
@@ -59,7 +59,7 @@ fn run_app<B: ratatui::backend::Backend>(
 fn handle_key_event_normal_mode(key: KeyCode, app: &mut App) {
     match key {
         KeyCode::Char('a') => {
-            let _ = EnterEditModeCommand.execute(app);
+            let _ = EnterAddModeCommand.execute(app);
         }
         KeyCode::Down => {
             app.select_next();
@@ -86,18 +86,10 @@ fn handle_key_event_normal_mode(key: KeyCode, app: &mut App) {
     }
 }
 
-fn handle_key_event_editing_mode(key: KeyCode, app: &mut App) {
+fn handle_key_event_adding_mode(key: KeyCode, app: &mut App) {
     match key {
         KeyCode::Enter => {
-            if !app.input_title.is_empty() {
-                if let Err(e) = AddTaskCommand.execute(app) {
-                    app.is_error = true;
-                    app.error_message = e.to_string();
-                } else {
-                    app.is_error = false;
-                    app.error_message.clear();
-                }
-            }
+            handle_errors(AddTaskCommand, app);
             if !app.is_error {
                 app.input_mode = InputMode::Normal;
             }
@@ -120,15 +112,7 @@ fn handle_key_event_editing_existing_mode(key: KeyCode, app: &mut App) {
     match key {
         KeyCode::Tab => app.next_input_field(),
         KeyCode::Enter => {
-            if !app.input_title.is_empty() {
-                if let Err(e) = FinishEditingExistingTaskCommand.execute(app) {
-                    app.is_error = true;
-                    app.error_message = e.to_string();
-                } else {
-                    app.is_error = false;
-                    app.error_message.clear();
-                }
-            }
+            handle_errors(FinishEditingExistingTaskCommand, app);
             if !app.is_error {
                 app.input_mode = InputMode::Normal;
             }
@@ -143,5 +127,15 @@ fn handle_key_event_editing_existing_mode(key: KeyCode, app: &mut App) {
             let _ = StopEditingCommand.execute(app);
         }
         _ => {}
+    }
+}
+
+fn handle_errors<T: Command>(command:T, app: &mut App) {
+    if let Err(e) = command.execute(app) {
+        app.is_error = true;
+        app.error_message = e.to_string();
+    } else {
+        app.is_error = false;
+        app.error_message.clear();
     }
 }
