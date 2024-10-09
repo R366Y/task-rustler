@@ -137,7 +137,7 @@ pub struct StopEditingCommand;
 
 impl Command for StopEditingCommand {
     fn execute(&self, app: &mut App) -> Result<()> {
-        app.input_mode = InputMode::Normal;
+        app.input_mode = InputMode::View;
         app.input_title.clear();
         app.input_description.clear();
         app.input_date.clear();

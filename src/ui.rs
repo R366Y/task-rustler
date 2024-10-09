@@ -15,7 +15,7 @@ const COMPLETED_TEXT_FG_COLOR: Color = SLATE.c500;
 
 pub fn ui(f: &mut Frame, app: &mut App) {
     match app.input_mode {
-        InputMode::Normal => {
+        InputMode::View => {
             let [main_area, message_area] =
                 Layout::vertical([Constraint::Min(1), Constraint::Length(1)])
                     .margin(1)
@@ -124,7 +124,7 @@ fn render_input_date_area(f: &mut Frame, app: &mut App, area: Rect) {
 
 fn render_message_area(f: &mut Frame, app: &mut App, area: Rect) {
     let (msg, style) = match app.input_mode {
-        InputMode::Normal => (
+        InputMode::View => (
             vec![
                 Span::styled("Display tasks", Style::default().bg(Color::White).fg(Color::Black)),
                 Span::raw("  Press "),
@@ -134,7 +134,7 @@ fn render_message_area(f: &mut Frame, app: &mut App, area: Rect) {
             Style::default().add_modifier(Modifier::BOLD),
         ),
         InputMode::Adding => (
-            if !app.is_error {
+            if app.error.is_none() {
                 vec![
                     Span::styled("Add task", Style::default().bg(Color::White).fg(Color::Black)),
                     Span::raw("  Press "),
@@ -145,14 +145,14 @@ fn render_message_area(f: &mut Frame, app: &mut App, area: Rect) {
                 ]
             } else {
                 vec![Span::styled(
-                    app.error_message.clone(),
+                    app.error.as_ref().unwrap(),
                     Style::default().red(),
                 )]
             },
             Style::default(),
         ),
         InputMode::EditingExisting => (
-            if !app.is_error {
+            if app.error.is_none() {
                 vec![
                     Span::styled("Edit task", Style::default().bg(Color::White).fg(Color::Black)),
                     Span::raw("  Press "),
@@ -163,7 +163,7 @@ fn render_message_area(f: &mut Frame, app: &mut App, area: Rect) {
                 ]
             } else {
                 vec![Span::styled(
-                    app.error_message.clone(),
+                    app.error.as_ref().unwrap(),
                     Style::default().red(),
                 )]
             },
@@ -247,7 +247,7 @@ fn priority_to_color(priority: &Priority) -> Color {
 fn create_input_paragraph<'a>(app: &'a App, text: &'a str, title: &'a str) -> Paragraph<'a> {
     Paragraph::new(text)
         .style(match app.input_mode {
-            InputMode::Normal => Style::default(),
+            InputMode::View => Style::default(),
             InputMode::Adding => Style::default().fg(Color::Green),
             InputMode::EditingExisting => Style::default().fg(Color::Yellow),
         })
