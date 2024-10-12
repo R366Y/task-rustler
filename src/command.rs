@@ -1,19 +1,19 @@
-use crate::app::{App, InputField, InputMode};
+use crate::app::{AppContext, InputFieldType, InputMode};
 use crate::date::{TaskDate, DATE_FORMAT};
 use crate::task::Task;
 use anyhow::{anyhow, Context, Result};
 
 pub trait Command {
-    fn execute(&self, app: &mut App) -> Result<()>;
+    fn execute(&self, app: &mut AppContext) -> Result<()>;
 }
 
 /// Enter in add command input mode
 pub struct EnterAddModeCommand;
 
 impl Command for EnterAddModeCommand {
-    fn execute(&self, app: &mut App) -> Result<()> {
+    fn execute(&self, app: &mut AppContext) -> Result<()> {
         app.input_mode = InputMode::Adding;
-        app.input_field = InputField::Title;
+        app.input_field = InputFieldType::Title;
         Ok(())
     }
 }
@@ -22,7 +22,7 @@ impl Command for EnterAddModeCommand {
 pub struct AddTaskCommand;
 
 impl Command for AddTaskCommand {
-    fn execute(&self, app: &mut App) -> Result<()> {
+    fn execute(&self, app: &mut AppContext) -> Result<()> {
         let mut t = Task::new();
         if app.input_title.is_empty() {
             return Err(anyhow!("You must insert at least a title for the task"));
@@ -44,7 +44,7 @@ impl Command for AddTaskCommand {
 pub struct StartEditingExistingTaskCommand;
 
 impl Command for StartEditingExistingTaskCommand {
-    fn execute(&self, app: &mut App) -> Result<()> {
+    fn execute(&self, app: &mut AppContext) -> Result<()> {
         if let Some(index) = app.task_list.state.selected() {
             app.input_title = app.task_list.items[index].title.clone();
             app.input_description = app.task_list.items[index].description.clone();
@@ -55,7 +55,7 @@ impl Command for StartEditingExistingTaskCommand {
                 .map(|d| d.format(DATE_FORMAT).to_string())
                 .unwrap_or(String::new());
             app.input_mode = InputMode::EditingExisting;
-            app.input_field = InputField::Title;
+            app.input_field = InputFieldType::Title;
         }
         Ok(())
     }
@@ -65,7 +65,7 @@ impl Command for StartEditingExistingTaskCommand {
 pub struct FinishEditingExistingTaskCommand;
 
 impl Command for FinishEditingExistingTaskCommand {
-    fn execute(&self, app: &mut App) -> Result<()> {
+    fn execute(&self, app: &mut AppContext) -> Result<()> {
         if let Some(index) = app.task_list.state.selected() {
             if app.input_title.is_empty() {
                 return Err(anyhow!("You must insert at least a title for the task"));
@@ -90,7 +90,7 @@ impl Command for FinishEditingExistingTaskCommand {
 pub struct ToggleTaskStatusCommand;
 
 impl Command for ToggleTaskStatusCommand {
-    fn execute(&self, app: &mut App) -> Result<()> {
+    fn execute(&self, app: &mut AppContext) -> Result<()> {
         if let Some(index) = app.task_list.state.selected() {
             let item = &mut app.task_list.items[index];
             item.completed = match item.completed {
@@ -109,7 +109,7 @@ impl Command for ToggleTaskStatusCommand {
 pub struct ToggleItemPriorityCommand;
 
 impl Command for ToggleItemPriorityCommand {
-    fn execute(&self, app: &mut App) -> Result<()> {
+    fn execute(&self, app: &mut AppContext) -> Result<()> {
         if let Some(index) = app.task_list.state.selected() {
             let item = &mut app.task_list.items[index];
             item.priority = item.priority.next();
@@ -122,7 +122,7 @@ impl Command for ToggleItemPriorityCommand {
 pub struct DeleteTaskCommand;
 
 impl Command for DeleteTaskCommand {
-    fn execute(&self, app: &mut App) -> Result<()> {
+    fn execute(&self, app: &mut AppContext) -> Result<()> {
         if let Some(index) = app.task_list.state.selected() {
             app.tasks_service.delete_task(app.task_list.items[index].id);
             app.task_list.items.remove(index);
@@ -136,11 +136,12 @@ impl Command for DeleteTaskCommand {
 pub struct StopEditingCommand;
 
 impl Command for StopEditingCommand {
-    fn execute(&self, app: &mut App) -> Result<()> {
+    fn execute(&self, app: &mut AppContext) -> Result<()> {
         app.input_mode = InputMode::View;
         app.input_title.clear();
         app.input_description.clear();
         app.input_date.clear();
+        app.error = None;
         Ok(())
     }
 }

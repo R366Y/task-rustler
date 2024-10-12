@@ -3,12 +3,12 @@ use ratatui::crossterm::event::{Event, KeyCode};
 use ratatui::Terminal;
 use std::error::Error;
 use std::io;
-use task_rustler::app::{App, InputMode};
+use task_rustler::app::{AppContext, InputMode};
 use task_rustler::command::*;
 use task_rustler::ui;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let mut app = App::new(String::from("tasks.db"));
+    let mut app = AppContext::new(String::from("tasks.db"));
     app.refresh_task_list();
     let mut terminal = ratatui::init();
     let res = run_app(&mut terminal, app);
@@ -22,7 +22,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 fn run_app<B: ratatui::backend::Backend>(
     terminal: &mut Terminal<B>,
-    mut app: App,
+    mut app: AppContext,
 ) -> io::Result<()> {
     loop {
         terminal.draw(|f| ui::ui(f, &mut app))?;
@@ -38,11 +38,11 @@ fn run_app<B: ratatui::backend::Backend>(
                         return Ok(());
                     }
                     KeyCode::Char('h') => {
-                        app.show_popup = !app.show_popup;
+                        app.show_help = !app.show_help;
                     }
                     KeyCode::Esc => {
-                        if app.show_popup {
-                            app.show_popup = false;
+                        if app.show_help {
+                            app.show_help = false;
                         }
                     }
                     _ => handle_key_event_view_mode(key.code, &mut app),
@@ -56,7 +56,7 @@ fn run_app<B: ratatui::backend::Backend>(
     }
 }
 
-fn handle_key_event_view_mode(key: KeyCode, app: &mut App) {
+fn handle_key_event_view_mode(key: KeyCode, app: &mut AppContext) {
     match key {
         KeyCode::Char('a') => {
             let _ = EnterAddModeCommand.execute(app);
@@ -86,7 +86,7 @@ fn handle_key_event_view_mode(key: KeyCode, app: &mut App) {
     }
 }
 
-fn handle_key_event_adding_mode(key: KeyCode, app: &mut App) {
+fn handle_key_event_adding_mode(key: KeyCode, app: &mut AppContext) {
     match key {
         KeyCode::Enter => {
             handle_errors(AddTaskCommand, app);
@@ -104,7 +104,7 @@ fn handle_key_event_adding_mode(key: KeyCode, app: &mut App) {
     }
 }
 
-fn handle_key_event_editing_existing_mode(key: KeyCode, app: &mut App) {
+fn handle_key_event_editing_existing_mode(key: KeyCode, app: &mut AppContext) {
     match key {
         KeyCode::Tab => app.next_input_field(),
         KeyCode::Enter => {
@@ -122,7 +122,7 @@ fn handle_key_event_editing_existing_mode(key: KeyCode, app: &mut App) {
     }
 }
 
-fn handle_errors<T: Command>(command:T, app: &mut App) {
+fn handle_errors<T: Command>(command:T, app: &mut AppContext) {
     if let Err(e) = command.execute(app) {
         app.error= Some(e.to_string());
     } else {

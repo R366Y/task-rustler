@@ -1,4 +1,4 @@
-use crate::app::{App, InputField, InputMode};
+use crate::app::{AppContext, InputFieldType, InputMode};
 use crate::task::{Priority, Task};
 use ratatui::layout::{Constraint, Flex, Layout, Position, Rect};
 use ratatui::prelude::{Color, Direction, Line, Modifier, Span, StatefulWidget, Style};
@@ -13,7 +13,7 @@ const SELECTED_STYLE: Style = Style::new().bg(SLATE.c800).add_modifier(Modifier:
 const TEXT_FG_COLOR: Color = SLATE.c200;
 const COMPLETED_TEXT_FG_COLOR: Color = SLATE.c500;
 
-pub fn ui(f: &mut Frame, app: &mut App) {
+pub fn ui(f: &mut Frame, app: &mut AppContext) {
     match app.input_mode {
         InputMode::View => {
             let [main_area, message_area] =
@@ -36,15 +36,15 @@ pub fn ui(f: &mut Frame, app: &mut App) {
                     .areas(f.area());
 
             let input_area = match app.input_field {
-                InputField::Title => input_title_area,
-                InputField::Description => input_description_area,
-                InputField::Date => input_date_area,
+                InputFieldType::Title => input_title_area,
+                InputFieldType::Description => input_description_area,
+                InputFieldType::Date => input_date_area,
             };
             let x = input_area.x
                 + match app.input_field {
-                InputField::Title => app.input_title.len() as u16,
-                InputField::Description => app.input_description.len() as u16,
-                InputField::Date => app.input_date.len() as u16,
+                InputFieldType::Title => app.input_title.len() as u16,
+                InputFieldType::Description => app.input_description.len() as u16,
+                InputFieldType::Date => app.input_date.len() as u16,
             }
                 + 1;
             let y = input_area.y + 1;
@@ -57,7 +57,7 @@ pub fn ui(f: &mut Frame, app: &mut App) {
             render_message_area(f, app, message_area);
         }
     }
-    if app.show_popup {
+    if app.show_help {
         let block = Block::bordered().title("Help");
         let area = render_popup(f.area(), 40, 80);
         f.render_widget(Clear, area); //this clears out the background
@@ -82,7 +82,7 @@ pub fn ui(f: &mut Frame, app: &mut App) {
     }
 }
 
-fn render_list(f: &mut Frame, app: &mut App, area: Rect) {
+fn render_list(f: &mut Frame, app: &mut AppContext, area: Rect) {
     let block = Block::new()
         .title(Line::raw("Task Rustler").centered())
         .borders(Borders::TOP)
@@ -107,22 +107,22 @@ fn render_list(f: &mut Frame, app: &mut App, area: Rect) {
     StatefulWidget::render(list, area, f.buffer_mut(), &mut app.task_list.state);
 }
 
-fn render_input_title_area(f: &mut Frame, app: &mut App, area: Rect) {
+fn render_input_title_area(f: &mut Frame, app: &mut AppContext, area: Rect) {
     let input = create_input_paragraph(app, app.input_title.as_str(), "Title\u{2217}");
     f.render_widget(input, area);
 }
 
-fn render_input_description_area(f: &mut Frame, app: &mut App, area: Rect) {
+fn render_input_description_area(f: &mut Frame, app: &mut AppContext, area: Rect) {
     let input = create_input_paragraph(app, app.input_description.as_str(), "Description");
     f.render_widget(input, area);
 }
 
-fn render_input_date_area(f: &mut Frame, app: &mut App, area: Rect) {
+fn render_input_date_area(f: &mut Frame, app: &mut AppContext, area: Rect) {
     let input = create_input_paragraph(app, app.input_date.as_str(), "Date (dd-mm-yyyy)");
     f.render_widget(input, area);
 }
 
-fn render_message_area(f: &mut Frame, app: &mut App, area: Rect) {
+fn render_message_area(f: &mut Frame, app: &mut AppContext, area: Rect) {
     let (msg, style) = match app.input_mode {
         InputMode::View => (
             vec![
@@ -248,7 +248,7 @@ fn priority_to_color(priority: &Priority) -> Color {
     }
 }
 
-fn create_input_paragraph<'a>(app: &'a App, text: &'a str, title: &'a str) -> Paragraph<'a> {
+fn create_input_paragraph<'a>(app: &'a AppContext, text: &'a str, title: &'a str) -> Paragraph<'a> {
     Paragraph::new(text)
         .style(match app.input_mode {
             InputMode::View => Style::default(),

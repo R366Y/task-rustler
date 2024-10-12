@@ -1,5 +1,5 @@
 use crate::task::Task;
-use crate::task_manager::TasksService;
+use crate::task_manager::{SortOrder, TasksService};
 use ratatui::widgets::ListState;
 
 pub struct TaskList {
@@ -22,35 +22,35 @@ pub enum InputMode {
     EditingExisting,
 }
 #[derive(Debug)]
-pub enum InputField {
+pub enum InputFieldType {
     Title,
     Description,
     Date,
 }
 
-pub struct App {
+pub struct AppContext {
     pub task_list: TaskList,
     pub input_title: String,
     pub input_description: String,
     pub input_date: String,
     pub input_mode: InputMode,
-    pub input_field: InputField,
+    pub input_field: InputFieldType,
     pub tasks_service: TasksService,
-    pub show_popup: bool,
+    pub show_help: bool,
     pub error: Option<String>,
 }
 
-impl App {
-    pub fn new(db_path: String) -> App {
-        App {
+impl AppContext {
+    pub fn new(db_path: String) -> AppContext {
+        AppContext {
             task_list: TaskList::new(),
             input_title: String::new(),
             input_description: String::new(),
             input_date: String::new(),
             input_mode: InputMode::View,
-            input_field: InputField::Title,
+            input_field: InputFieldType::Title,
             tasks_service: TasksService::new(db_path),
-            show_popup: false,
+            show_help: false,
             error: None,
         }
     }
@@ -82,26 +82,26 @@ impl App {
     }
 
     pub fn refresh_task_list(&mut self) {
-        self.task_list.items = self.tasks_service.get_all_tasks()
+        self.task_list.items = self.tasks_service.get_all_tasks_sorted(SortOrder::High);
     }
 
     pub fn next_input_field(&mut self) {
         self.input_field = match self.input_field {
-            InputField::Title => InputField::Description,
-            InputField::Description => InputField::Date,
-            InputField::Date => InputField::Title,
+            InputFieldType::Title => InputFieldType::Description,
+            InputFieldType::Description => InputFieldType::Date,
+            InputFieldType::Date => InputFieldType::Title,
         }
     }
 
     pub fn handle_backspace(&mut self) {
         match self.input_field {
-            InputField::Title => {
+            InputFieldType::Title => {
                 self.input_title.pop();
             }
-            InputField::Description => {
+            InputFieldType::Description => {
                 self.input_description.pop();
             }
-            InputField::Date => {
+            InputFieldType::Date => {
                 self.input_date.pop();
             }
         }
@@ -109,9 +109,9 @@ impl App {
 
     pub fn handle_char_input(&mut self, c: char) {
         match self.input_field {
-            InputField::Title => self.input_title.push(c),
-            InputField::Description => self.input_description.push(c),
-            InputField::Date => self.input_date.push(c),
+            InputFieldType::Title => self.input_title.push(c),
+            InputFieldType::Description => self.input_description.push(c),
+            InputFieldType::Date => self.input_date.push(c),
         }
     }
 }
