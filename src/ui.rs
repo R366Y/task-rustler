@@ -15,7 +15,7 @@ const COMPLETED_TEXT_FG_COLOR: Color = SLATE.c500;
 
 pub fn ui(f: &mut Frame, app: &mut App) {
     match app.input_mode {
-        InputMode::Normal => {
+        InputMode::View => {
             let [main_area, message_area] =
                 Layout::vertical([Constraint::Min(1), Constraint::Length(1)])
                     .margin(1)
@@ -32,8 +32,8 @@ pub fn ui(f: &mut Frame, app: &mut App) {
                     Constraint::Length(3),
                     Constraint::Length(1),
                 ])
-                .margin(1)
-                .areas(f.area());
+                    .margin(1)
+                    .areas(f.area());
 
             let input_area = match app.input_field {
                 InputField::Title => input_title_area,
@@ -42,10 +42,10 @@ pub fn ui(f: &mut Frame, app: &mut App) {
             };
             let x = input_area.x
                 + match app.input_field {
-                    InputField::Title => app.input_title.len() as u16,
-                    InputField::Description => app.input_description.len() as u16,
-                    InputField::Date => app.input_date.len() as u16,
-                }
+                InputField::Title => app.input_title.len() as u16,
+                InputField::Description => app.input_description.len() as u16,
+                InputField::Date => app.input_date.len() as u16,
+            }
                 + 1;
             let y = input_area.y + 1;
             f.set_cursor_position(Position::new(x, y));
@@ -108,7 +108,7 @@ fn render_list(f: &mut Frame, app: &mut App, area: Rect) {
 }
 
 fn render_input_title_area(f: &mut Frame, app: &mut App, area: Rect) {
-    let input = create_input_paragraph(app, app.input_title.as_str(), "Title");
+    let input = create_input_paragraph(app, app.input_title.as_str(), "Title\u{2217}");
     f.render_widget(input, area);
 }
 
@@ -124,9 +124,9 @@ fn render_input_date_area(f: &mut Frame, app: &mut App, area: Rect) {
 
 fn render_message_area(f: &mut Frame, app: &mut App, area: Rect) {
     let (msg, style) = match app.input_mode {
-        InputMode::Normal => (
+        InputMode::View => (
             vec![
-                Span::styled("Display tasks", Style::default().bg(Color::White).fg(Color::Black)),
+                Span::styled("Tasks list", Style::default().bg(Color::White).fg(Color::Black)),
                 Span::raw("  Press "),
                 Span::styled("h", Style::default().add_modifier(Modifier::BOLD)),
                 Span::raw(" for help "),
@@ -134,7 +134,7 @@ fn render_message_area(f: &mut Frame, app: &mut App, area: Rect) {
             Style::default().add_modifier(Modifier::BOLD),
         ),
         InputMode::Adding => (
-            if !app.is_error {
+            if app.error.is_none() {
                 vec![
                     Span::styled("Add task", Style::default().bg(Color::White).fg(Color::Black)),
                     Span::raw("  Press "),
@@ -144,15 +144,17 @@ fn render_message_area(f: &mut Frame, app: &mut App, area: Rect) {
                     Span::raw(" to add new item"),
                 ]
             } else {
-                vec![Span::styled(
-                    app.error_message.clone(),
-                    Style::default().red(),
-                )]
+                vec![Span::styled("Error", Style::default().bg(Color::White).fg(Color::Black)),
+                     Span::raw(" "),
+                     Span::styled(
+                         app.error.clone().unwrap_or(String::new()),
+                         Style::default().red(),
+                     )]
             },
             Style::default(),
         ),
         InputMode::EditingExisting => (
-            if !app.is_error {
+            if app.error.is_none() {
                 vec![
                     Span::styled("Edit task", Style::default().bg(Color::White).fg(Color::Black)),
                     Span::raw("  Press "),
@@ -162,10 +164,12 @@ fn render_message_area(f: &mut Frame, app: &mut App, area: Rect) {
                     Span::raw(" to save changes"),
                 ]
             } else {
-                vec![Span::styled(
-                    app.error_message.clone(),
-                    Style::default().red(),
-                )]
+                vec![Span::styled("Error", Style::default().bg(Color::White).fg(Color::Black)),
+                     Span::raw(" "),
+                     Span::styled(
+                         app.error.clone().unwrap_or(String::new()),
+                         Style::default().red(),
+                     )]
             },
             Style::default(),
         ),
@@ -199,7 +203,7 @@ impl From<&Task> for ListItem<'_> {
                         .try_into()
                         .unwrap_or(format!("{}", " ".repeat(10)))
                 ),
-                Style::default(),
+                Style::default().fg(TEXT_FG_COLOR),
             ),
             Span::styled(
                 format!("    {} - {}", value.title, value.description),
@@ -221,7 +225,7 @@ impl From<&Task> for ListItem<'_> {
                         .try_into()
                         .unwrap_or(format!("{}", " ".repeat(10)))
                 ),
-                Style::default(),
+                Style::default().fg(COMPLETED_TEXT_FG_COLOR),
             ),
             Span::styled(
                 format!("    {} - {}", value.title, value.description),
@@ -247,7 +251,7 @@ fn priority_to_color(priority: &Priority) -> Color {
 fn create_input_paragraph<'a>(app: &'a App, text: &'a str, title: &'a str) -> Paragraph<'a> {
     Paragraph::new(text)
         .style(match app.input_mode {
-            InputMode::Normal => Style::default(),
+            InputMode::View => Style::default(),
             InputMode::Adding => Style::default().fg(Color::Green),
             InputMode::EditingExisting => Style::default().fg(Color::Yellow),
         })

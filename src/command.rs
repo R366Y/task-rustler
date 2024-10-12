@@ -1,16 +1,17 @@
 use crate::app::{App, InputField, InputMode};
 use crate::date::{TaskDate, DATE_FORMAT};
 use crate::task::Task;
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 
 pub trait Command {
-    fn execute(&mut self, app: &mut App) -> Result<()>;
+    fn execute(&self, app: &mut App) -> Result<()>;
 }
 
-pub struct EnterEditModeCommand;
+/// Enter in add command input mode
+pub struct EnterAddModeCommand;
 
-impl Command for EnterEditModeCommand {
-    fn execute(&mut self, app: &mut App) -> Result<()> {
+impl Command for EnterAddModeCommand {
+    fn execute(&self, app: &mut App) -> Result<()> {
         app.input_mode = InputMode::Adding;
         app.input_field = InputField::Title;
         Ok(())
@@ -21,8 +22,11 @@ impl Command for EnterEditModeCommand {
 pub struct AddTaskCommand;
 
 impl Command for AddTaskCommand {
-    fn execute(&mut self, app: &mut App) -> Result<()> {
+    fn execute(&self, app: &mut App) -> Result<()> {
         let mut t = Task::new();
+        if app.input_title.is_empty() {
+            return Err(anyhow!("You must insert at least a title for the task"));
+        }
         if !app.input_date.is_empty() {
             t.date = TaskDate::try_from(app.input_date.drain(..).collect::<String>())
                 .context("Invalid date format, use dd-mm-yyyy")?;
@@ -35,45 +39,12 @@ impl Command for AddTaskCommand {
     }
 }
 
-/// Toggle completed for selected task status
-pub struct ToggleTaskStatusCommand;
-
-impl Command for ToggleTaskStatusCommand {
-    fn execute(&mut self, app: &mut App) -> Result<()> {
-        if let Some(index) = app.task_list.state.selected() {
-            let item = &mut app.task_list.items[index];
-            item.completed = match item.completed {
-                true => false,
-                false => true,
-            };
-            let _ = app
-                .tasks_service
-                .toggle_task_status(item.id, item.completed);
-        };
-        Ok(())
-    }
-}
-
-/// Switch between priorities
-pub struct ToggleItemPriorityCommand;
-
-impl Command for ToggleItemPriorityCommand {
-    fn execute(&mut self, app: &mut App) -> Result<()> {
-        if let Some(index) = app.task_list.state.selected() {
-            let item = &mut app.task_list.items[index];
-            item.priority = item.priority.next();
-            app.tasks_service.change_priority(item.id, &item.priority);
-        }
-        Ok(())
-    }
-}
-
 /// Start editing a task, move cursor to Title input field
 /// and set InputMode equal to InputMode::EditingExisting
 pub struct StartEditingExistingTaskCommand;
 
 impl Command for StartEditingExistingTaskCommand {
-    fn execute(&mut self, app: &mut App) -> Result<()> {
+    fn execute(&self, app: &mut App) -> Result<()> {
         if let Some(index) = app.task_list.state.selected() {
             app.input_title = app.task_list.items[index].title.clone();
             app.input_description = app.task_list.items[index].description.clone();
@@ -94,8 +65,11 @@ impl Command for StartEditingExistingTaskCommand {
 pub struct FinishEditingExistingTaskCommand;
 
 impl Command for FinishEditingExistingTaskCommand {
-    fn execute(&mut self, app: &mut App) -> Result<()> {
+    fn execute(&self, app: &mut App) -> Result<()> {
         if let Some(index) = app.task_list.state.selected() {
+            if app.input_title.is_empty() {
+                return Err(anyhow!("You must insert at least a title for the task"));
+            }
             if !app.input_date.is_empty() {
                 app.task_list.items[index].date =
                     TaskDate::try_from(app.input_date.drain(..).collect::<String>())
@@ -111,10 +85,44 @@ impl Command for FinishEditingExistingTaskCommand {
     }
 }
 
+
+/// Toggle completed for selected task status
+pub struct ToggleTaskStatusCommand;
+
+impl Command for ToggleTaskStatusCommand {
+    fn execute(&self, app: &mut App) -> Result<()> {
+        if let Some(index) = app.task_list.state.selected() {
+            let item = &mut app.task_list.items[index];
+            item.completed = match item.completed {
+                true => false,
+                false => true,
+            };
+            let _ = app
+                .tasks_service
+                .toggle_task_status(item.id, item.completed);
+        };
+        Ok(())
+    }
+}
+
+/// Switch between priorities
+pub struct ToggleItemPriorityCommand;
+
+impl Command for ToggleItemPriorityCommand {
+    fn execute(&self, app: &mut App) -> Result<()> {
+        if let Some(index) = app.task_list.state.selected() {
+            let item = &mut app.task_list.items[index];
+            item.priority = item.priority.next();
+            app.tasks_service.change_priority(item.id, &item.priority);
+        }
+        Ok(())
+    }
+}
+
 pub struct DeleteTaskCommand;
 
 impl Command for DeleteTaskCommand {
-    fn execute(&mut self, app: &mut App) -> Result<()> {
+    fn execute(&self, app: &mut App) -> Result<()> {
         if let Some(index) = app.task_list.state.selected() {
             app.tasks_service.delete_task(app.task_list.items[index].id);
             app.task_list.items.remove(index);
@@ -128,8 +136,8 @@ impl Command for DeleteTaskCommand {
 pub struct StopEditingCommand;
 
 impl Command for StopEditingCommand {
-    fn execute(&mut self, app: &mut App) -> Result<()> {
-        app.input_mode = InputMode::Normal;
+    fn execute(&self, app: &mut App) -> Result<()> {
+        app.input_mode = InputMode::View;
         app.input_title.clear();
         app.input_description.clear();
         app.input_date.clear();

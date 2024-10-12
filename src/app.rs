@@ -17,7 +17,7 @@ impl TaskList {
 }
 #[derive(Debug)]
 pub enum InputMode {
-    Normal,
+    View,
     Adding,
     EditingExisting,
 }
@@ -37,8 +37,7 @@ pub struct App {
     pub input_field: InputField,
     pub tasks_service: TasksService,
     pub show_popup: bool,
-    pub error_message: String,
-    pub is_error: bool,
+    pub error: Option<String>,
 }
 
 impl App {
@@ -48,12 +47,11 @@ impl App {
             input_title: String::new(),
             input_description: String::new(),
             input_date: String::new(),
-            input_mode: InputMode::Normal,
+            input_mode: InputMode::View,
             input_field: InputField::Title,
             tasks_service: TasksService::new(db_path),
             show_popup: false,
-            error_message: String::new(),
-            is_error: false,
+            error: None,
         }
     }
 
@@ -106,6 +104,14 @@ impl App {
             InputField::Date => {
                 self.input_date.pop();
             }
+        }
+    }
+
+    pub fn handle_char_input(&mut self, c: char) {
+        match self.input_field {
+            InputField::Title => self.input_title.push(c),
+            InputField::Description => self.input_description.push(c),
+            InputField::Date => self.input_date.push(c),
         }
     }
 }
