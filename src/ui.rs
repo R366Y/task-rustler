@@ -72,7 +72,7 @@ pub fn ui(f: &mut Frame, app: &mut AppContext) {
             Line::raw("'q' to quit"),
             Line::raw("'a' to add a task"),
             Line::raw("'m' to modify the selected task"),
-            Line::raw("'d' to delete the selected task"),
+            Line::raw("'Ctrl + d' to delete the selected task"),
             Line::raw("'p' to change the priority"),
             Line::raw("'s' to sort by priority"),
             Line::raw("'↑↓' to select task"),

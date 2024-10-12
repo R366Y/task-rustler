@@ -1,5 +1,5 @@
 use ratatui::crossterm::event;
-use ratatui::crossterm::event::{Event, KeyCode};
+use ratatui::crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers};
 use ratatui::Terminal;
 use std::error::Error;
 use std::io;
@@ -45,7 +45,7 @@ fn run_app<B: ratatui::backend::Backend>(
                             app.show_help = false;
                         }
                     }
-                    _ => handle_key_event_view_mode(key.code, &mut app),
+                    _ => handle_key_event_view_mode(key, &mut app),
                 },
                 InputMode::Adding => handle_key_event_adding_mode(key.code, &mut app),
                 InputMode::EditingExisting => {
@@ -56,30 +56,30 @@ fn run_app<B: ratatui::backend::Backend>(
     }
 }
 
-fn handle_key_event_view_mode(key: KeyCode, app: &mut AppContext) {
-    match key {
-        KeyCode::Char('a') => {
+fn handle_key_event_view_mode(key: KeyEvent, app: &mut AppContext) {
+    match (key.code, key.modifiers) {
+        (KeyCode::Char('a'), KeyModifiers::NONE) => {
             let _ = EnterAddModeCommand.execute(app);
         }
-        KeyCode::Down => {
+        (KeyCode::Down, KeyModifiers::NONE) => {
             app.select_next();
         }
-        KeyCode::Up => {
+        (KeyCode::Up, KeyModifiers::NONE) => {
             app.select_previous();
         }
-        KeyCode::Char(' ') => {
+        (KeyCode::Char(' '), KeyModifiers::NONE) => {
             let _ = ToggleTaskStatusCommand.execute(app);
         }
-        KeyCode::Char('m') => {
+        (KeyCode::Char('m'), KeyModifiers::NONE) => {
             let _ = StartEditingExistingTaskCommand.execute(app);
         }
-        KeyCode::Char('p') => {
+        (KeyCode::Char('p'), KeyModifiers::NONE) => {
             let _ = ToggleItemPriorityCommand.execute(app);
         }
-        KeyCode::Char('s') => {
+        (KeyCode::Char('s'), KeyModifiers::NONE) => {
             app.sort_by_priority();
         }
-        KeyCode::Char('d') => {
+        (KeyCode::Char('d'), KeyModifiers::CONTROL) => {
             let _ = DeleteTaskCommand.execute(app);
         }
         _ => {}
