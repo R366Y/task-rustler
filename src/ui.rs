@@ -69,14 +69,15 @@ pub fn ui(f: &mut Frame, app: &mut AppContext) {
             .constraints([Constraint::Percentage(80)])
             .split(area);
         let t1 = Paragraph::new(vec![
-            Line::raw("'q' to quit"),
             Line::raw("'a' to add a task"),
             Line::raw("'m' to modify the selected task"),
-            Line::raw("'d' to delete the selected task"),
             Line::raw("'p' to change the priority"),
             Line::raw("'s' to sort by priority"),
+            Line::raw("'t' to sort by date"),
             Line::raw("'↑↓' to select task"),
             Line::raw("'Space' to toggle status"),
+            Line::raw("'Ctrl + d' to delete the selected task"),
+            Line::raw("'Ctrl + q' to quit"),
         ]);
         f.render_widget(t1, popup_chunks[0]);
     }

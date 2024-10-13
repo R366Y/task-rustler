@@ -116,6 +116,38 @@ impl DB {
         tasks
     }
 
+    pub fn get_all_tasks_by_newest(&self) -> Vec<Task> {
+        let mut stmt = self
+            .connection
+            .prepare("SELECT id, title, description, completed, priority, end_date FROM tasks order by end_date desc")
+            .unwrap();
+        let task_row_iter = stmt
+            .query_map([], |row| Task::try_from(row))
+            .context("Couldn't get results from DB.")
+            .unwrap();
+        let mut tasks = Vec::new();
+        for task in task_row_iter {
+            tasks.push(task.unwrap());
+        }
+        tasks
+    }
+
+    pub fn get_all_tasks_by_oldest(&self) -> Vec<Task> {
+        let mut stmt = self
+            .connection
+            .prepare("SELECT id, title, description, completed, priority, end_date FROM tasks order by end_date asc")
+            .unwrap();
+        let task_row_iter = stmt
+            .query_map([], |row| Task::try_from(row))
+            .context("Couldn't get results from DB.")
+            .unwrap();
+        let mut tasks = Vec::new();
+        for task in task_row_iter {
+            tasks.push(task.unwrap());
+        }
+        tasks
+    }
+
     pub fn toggle_task_completed(&self, task_id: i32, completed: bool) -> usize {
         let completed = match completed {
             true => 1,

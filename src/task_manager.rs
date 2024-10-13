@@ -1,6 +1,7 @@
 use crate::task::{Priority, Task};
 use crate::task_db::DB;
 
+#[derive(Debug, Copy, Clone)]
 pub enum SortOrder {
     High,
     Low,
@@ -56,10 +57,17 @@ impl TasksService {
     }
 
     /// Return all the tasks sorted by `sort`
-    pub fn get_all_tasks_sorted(&self, sort: SortOrder) -> Vec<Task> {
+    pub fn get_all_tasks_sorted_by_priority(&self, sort: SortOrder) -> Vec<Task> {
         match sort {
             SortOrder::High => self.db.get_all_task_by_highest_priority(),
             SortOrder::Low => self.db.get_all_task_by_lowest_priority(),
+        }
+    }
+
+    pub fn get_all_tasks_sorted_by_date(&self, sort: SortOrder) -> Vec<Task> {
+        match sort {
+            SortOrder::High => self.db.get_all_tasks_by_newest(),
+            SortOrder::Low => self.db.get_all_tasks_by_oldest(),
         }
     }
 

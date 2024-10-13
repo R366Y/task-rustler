@@ -30,7 +30,7 @@ mod test {
                 description: "Third task".to_string(),
                 completed: false,
                 priority: Priority::High,
-                date: TaskDate::try_from("19-11-1976".to_string()).unwrap(),
+                date: TaskDate::try_from("19-11-2024".to_string()).unwrap(),
             },
         ];
         for t in tasks_to_add {
@@ -86,7 +86,7 @@ mod test {
     #[test]
     fn get_all_the_task_sorted_by_highest_priority() {
         let t = setup();
-        let tasks = t.get_all_tasks_sorted(SortOrder::High);
+        let tasks = t.get_all_tasks_sorted_by_priority(SortOrder::High);
         assert_eq!(
             tasks[0],
             Task {
@@ -95,7 +95,7 @@ mod test {
                 description: "Third task".to_string(),
                 completed: false,
                 priority: Priority::High,
-                date: TaskDate::try_from("19-11-1976".to_string()).unwrap(),
+                date: TaskDate::try_from("19-11-2024".to_string()).unwrap(),
             }
         );
     }
@@ -103,7 +103,7 @@ mod test {
     #[test]
     fn get_all_the_task_sorted_by_lowest_priority() {
         let t = setup();
-        let tasks = t.get_all_tasks_sorted(SortOrder::Low);
+        let tasks = t.get_all_tasks_sorted_by_priority(SortOrder::Low);
         assert_eq!(
             tasks[0],
             Task {
@@ -113,6 +113,40 @@ mod test {
                 completed: false,
                 priority: Priority::Low,
                 date: TaskDate::try_from("19-11-1976".to_string()).unwrap(),
+            }
+        );
+    }
+
+    #[test]
+    fn get_all_tasks_sorted_by_newest() {
+        let t = setup();
+        let tasks = t.get_all_tasks_sorted_by_date(SortOrder::High);
+        assert_eq!(
+            tasks[0],
+            Task {
+                id: 3,
+                title: "My third task title".to_string(),
+                description: "Third task".to_string(),
+                completed: false,
+                priority: Priority::High,
+                date: TaskDate::try_from("19-11-2024".to_string()).unwrap(),
+            }
+        );
+    }
+
+    #[test]
+    fn get_all_tasks_sorted_by_oldest() {
+        let t = setup();
+        let tasks = t.get_all_tasks_sorted_by_date(SortOrder::Low);
+        assert_eq!(
+            tasks[0],
+            Task {
+                id: 2,
+                title: "My second task title".to_string(),
+                description: "Second task".to_string(),
+                completed: false,
+                priority: Priority::Medium,
+                date: TaskDate(None),
             }
         );
     }
