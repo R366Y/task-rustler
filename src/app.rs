@@ -38,6 +38,7 @@ pub struct AppContext {
     pub tasks_service: TasksService,
     pub show_help: bool,
     pub error: Option<String>,
+    pub sort_order: SortOrder,
 }
 
 impl AppContext {
@@ -52,13 +53,21 @@ impl AppContext {
             tasks_service: TasksService::new(db_path),
             show_help: false,
             error: None,
+            sort_order: SortOrder::High
         }
     }
 
     pub fn sort_by_priority(&mut self) {
-        self.task_list
-            .items
-            .sort_by(|a, b| b.priority.cmp(&a.priority))
+        self.cycle_sort_order();
+        match self.sort_order {
+            SortOrder::High => self.task_list
+                .items
+                .sort_by(|a, b| b.priority.cmp(&a.priority)),
+            SortOrder::Low => self.task_list
+                .items
+                .sort_by(|a, b| a.priority.cmp(&b.priority))
+        }
+
     }
 
     pub fn select_none(&mut self) {
@@ -82,7 +91,7 @@ impl AppContext {
     }
 
     pub fn refresh_task_list(&mut self) {
-        self.task_list.items = self.tasks_service.get_all_tasks_sorted(SortOrder::High);
+        self.task_list.items = self.tasks_service.get_all_tasks_sorted(self.sort_order);
     }
 
     pub fn next_input_field(&mut self) {
@@ -90,6 +99,13 @@ impl AppContext {
             InputFieldType::Title => InputFieldType::Description,
             InputFieldType::Description => InputFieldType::Date,
             InputFieldType::Date => InputFieldType::Title,
+        }
+    }
+
+    pub fn cycle_sort_order(&mut self) {
+        self.sort_order = match self.sort_order {
+            SortOrder::High => SortOrder::Low,
+            SortOrder::Low => SortOrder::High,
         }
     }
 

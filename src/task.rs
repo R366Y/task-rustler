@@ -1,8 +1,7 @@
 use crate::date::TaskDate;
-use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub enum Priority {
     Low,
     Medium,
@@ -43,18 +42,6 @@ impl Display for Priority {
             Priority::Medium => write!(f, "="),
             Priority::High => write!(f, "↑"),
         }
-    }
-}
-
-impl PartialOrd<Self> for Priority {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Ord for Priority {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.to_usize().cmp(&other.to_usize())
     }
 }
 

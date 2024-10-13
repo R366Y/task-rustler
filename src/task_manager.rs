@@ -1,6 +1,7 @@
 use crate::task::{Priority, Task};
 use crate::task_db::DB;
 
+#[derive(Debug, Copy, Clone)]
 pub enum SortOrder {
     High,
     Low,
