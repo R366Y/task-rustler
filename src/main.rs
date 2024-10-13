@@ -33,14 +33,14 @@ fn run_app<B: ratatui::backend::Backend>(
                 continue;
             }
             match app.input_mode {
-                InputMode::View => match key.code {
-                    KeyCode::Char('q') => {
+                InputMode::View => match (key.code, key.modifiers) {
+                    (KeyCode::Char('q'), KeyModifiers::CONTROL) => {
                         return Ok(());
                     }
-                    KeyCode::Char('h') => {
+                    (KeyCode::Char('h'), KeyModifiers::NONE) => {
                         app.show_help = !app.show_help;
                     }
-                    KeyCode::Esc => {
+                    (KeyCode::Esc, KeyModifiers::NONE) => {
                         if app.show_help {
                             app.show_help = false;
                         }
@@ -78,6 +78,9 @@ fn handle_key_event_view_mode(key: KeyEvent, app: &mut AppContext) {
         }
         (KeyCode::Char('s'), KeyModifiers::NONE) => {
             app.sort_by_priority();
+        }
+        (KeyCode::Char('t'), KeyModifiers::NONE) => {
+            app.sort_by_date();
         }
         (KeyCode::Char('d'), KeyModifiers::CONTROL) => {
             let _ = DeleteTaskCommand.execute(app);

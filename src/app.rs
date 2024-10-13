@@ -67,7 +67,18 @@ impl AppContext {
                 .items
                 .sort_by(|a, b| a.priority.cmp(&b.priority))
         }
+    }
 
+    pub fn sort_by_date(&mut self) {
+        self.cycle_sort_order();
+        match self.sort_order {
+            SortOrder::High => self.task_list
+                .items
+                .sort_by(|a, b| b.date.cmp(&a.date)),
+            SortOrder::Low => self.task_list
+                .items
+                .sort_by(|a, b| a.date.cmp(&b.date))
+        }
     }
 
     pub fn select_none(&mut self) {
@@ -91,7 +102,7 @@ impl AppContext {
     }
 
     pub fn refresh_task_list(&mut self) {
-        self.task_list.items = self.tasks_service.get_all_tasks_sorted(self.sort_order);
+        self.task_list.items = self.tasks_service.get_all_tasks_sorted_by_priority(self.sort_order);
     }
 
     pub fn next_input_field(&mut self) {

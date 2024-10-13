@@ -2,7 +2,7 @@ use anyhow::Result;
 use chrono::NaiveDate;
 
 pub const DATE_FORMAT: &str = "%d-%m-%Y";
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Debug, Eq, PartialEq, Clone, Ord, PartialOrd)]
 pub struct TaskDate(pub Option<NaiveDate>);
 
 impl TryFrom<String> for TaskDate {
