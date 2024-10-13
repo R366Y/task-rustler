@@ -16,10 +16,11 @@
 ### Commands
 - __h__ help
 ![help popup](/pics/help.png)
-- __a__ insert a new task
+- __a__ add a new task
 ![insert task](/pics/add_task.png)
 - __m__ modify selected task
 ![modify task](/pics/modify_task.png)
 - __p__ change priority of a task
-- __s__ sort task by priority
-- __d__ delete task
+- __s__ sort tasks by priority
+- __t__ sort tasks by date
+- __Ctrl + d__ delete task
