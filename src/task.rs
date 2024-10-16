@@ -3,9 +3,9 @@ use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub enum Priority {
-    Low,
-    Medium,
-    High,
+    Low = 3 ,
+    Medium = 2,
+    High = 1,
 }
 
 impl Priority {
@@ -19,18 +19,18 @@ impl Priority {
 
     pub fn from_u8(value: u8) -> Option<Priority> {
         match value {
-            0 => Some(Priority::Low),
-            1 => Some(Priority::Medium),
-            2 => Some(Priority::High),
+            3 => Some(Priority::Low),
+            2 => Some(Priority::Medium),
+            1 => Some(Priority::High),
             _ => None,
         }
     }
 
-    pub fn to_usize(&self) -> usize {
+    pub fn to_u8(&self) -> u8 {
         match self {
-            Priority::Low => 0,
-            Priority::Medium => 1,
-            Priority::High => 2,
+            Priority::Low => 3,
+            Priority::Medium => 2,
+            Priority::High => 1,
         }
     }
 }

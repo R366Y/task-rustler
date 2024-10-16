@@ -25,7 +25,6 @@ fn build_todo_task(task: &Task) -> Todo {
     } else {
         todo.status(TodoStatus::NeedsAction);
     }
-    // FIXME: rfc5545 defines priority in a reverse order
-    todo.priority(task.priority.to_usize() as u32);
+    todo.priority(task.priority.to_u8() as u32);
     todo.done()
 }

@@ -52,7 +52,7 @@ impl DB {
                 params![
                     task.title.trim(),
                     task.description.trim(),
-                    task.priority.to_usize(),
+                    task.priority.to_u8(),
                     task.date,
                 ],
             )
@@ -87,7 +87,7 @@ impl DB {
     pub fn get_all_task_by_highest_priority(&self) -> Vec<Task> {
         let mut stmt = self
             .connection
-            .prepare("SELECT id, title, description, completed, priority, end_date FROM tasks order by priority desc")
+            .prepare("SELECT id, title, description, completed, priority, end_date FROM tasks order by priority asc")
             .unwrap();
         let task_row_iter = stmt
             .query_map([], |row| Task::try_from(row))
@@ -103,7 +103,7 @@ impl DB {
     pub fn get_all_task_by_lowest_priority(&self) -> Vec<Task> {
         let mut stmt = self
             .connection
-            .prepare("SELECT id, title, description, completed, priority, end_date FROM tasks order by priority asc")
+            .prepare("SELECT id, title, description, completed, priority, end_date FROM tasks order by priority desc")
             .unwrap();
         let task_row_iter = stmt
             .query_map([], |row| Task::try_from(row))
