@@ -51,6 +51,7 @@ fn run_app<B: ratatui::backend::Backend>(
                 InputMode::EditingExisting => {
                     handle_key_event_editing_existing_mode(key.code, &mut app)
                 }
+                InputMode::Export => {todo!()}
             }
         }
     }

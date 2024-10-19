@@ -20,6 +20,7 @@ pub enum InputMode {
     View,
     Adding,
     EditingExisting,
+    Export,
 }
 #[derive(Debug)]
 pub enum InputFieldType {

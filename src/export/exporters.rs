@@ -6,14 +6,14 @@ pub fn export_tasks_to_icalendar(calendar_name: &'static str, tasks: &[Task]) ->
     calendar.name(calendar_name);
     for task in tasks {
         calendar.push(
-            build_todo_task(task)
+            build_icalendar_todo_task(task)
         );
     }
 
     calendar.done()
 }
 
-fn build_todo_task(task: &Task) -> Todo {
+fn build_icalendar_todo_task(task: &Task) -> Todo {
     let mut todo = Todo::new();
     if let Some(date) = task.date.0{
         todo.all_day(date);

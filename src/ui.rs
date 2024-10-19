@@ -56,6 +56,7 @@ pub fn ui(f: &mut Frame, app: &mut AppContext) {
             render_input_date_area(f, app, input_date_area);
             render_message_area(f, app, message_area);
         }
+        InputMode::Export => {todo!()}
     }
     if app.show_help {
         let block = Block::bordered().title("Help");
@@ -174,6 +175,7 @@ fn render_message_area(f: &mut Frame, app: &mut AppContext, area: Rect) {
             },
             Style::default(),
         ),
+        InputMode::Export => {todo!()},
     };
     let help_message = Paragraph::new(Line::from(msg)).style(style);
     f.render_widget(help_message, area);
@@ -252,7 +254,7 @@ fn priority_to_color(priority: &Priority) -> Color {
 fn create_input_paragraph<'a>(app: &'a AppContext, text: &'a str, title: &'a str) -> Paragraph<'a> {
     Paragraph::new(text)
         .style(match app.input_mode {
-            InputMode::View => Style::default(),
+            InputMode::View | InputMode::Export => Style::default(),
             InputMode::Adding => Style::default().fg(Color::Green),
             InputMode::EditingExisting => Style::default().fg(Color::Yellow),
         })
