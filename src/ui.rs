@@ -56,8 +56,21 @@ pub fn ui(f: &mut Frame, app: &mut AppContext) {
             render_input_date_area(f, app, input_date_area);
             render_message_area(f, app, message_area);
         }
-        InputMode::Export => {todo!()}
+        InputMode::Export => {
+            let [main_area,input_path, message_area] = Layout::vertical([
+                Constraint::Min(1),
+                Constraint::Length(3),
+                Constraint::Length(1),
+            ])
+                .margin(1)
+                .areas(f.area());
+
+            render_list(f, app, main_area);
+            render_input_path_area(f, app, input_path);
+            render_message_area(f, app, message_area);
+        }
     }
+
     if app.show_help {
         let block = Block::bordered().title("Help");
         let area = render_popup(f.area(), 40, 80);
@@ -124,6 +137,11 @@ fn render_input_date_area(f: &mut Frame, app: &mut AppContext, area: Rect) {
     f.render_widget(input, area);
 }
 
+fn render_input_path_area(f: &mut Frame, app: &mut AppContext, area: Rect) {
+    let input = create_input_paragraph(app, "", "File path");
+    f.render_widget(input, area);
+}
+
 fn render_message_area(f: &mut Frame, app: &mut AppContext, area: Rect) {
     let (msg, style) = match app.input_mode {
         InputMode::View => (
@@ -175,7 +193,24 @@ fn render_message_area(f: &mut Frame, app: &mut AppContext, area: Rect) {
             },
             Style::default(),
         ),
-        InputMode::Export => {todo!()},
+        InputMode::Export => (
+            if app.error.is_none() {
+                vec![
+                Span::styled("Export tasks list", Style::default().bg(Color::White).fg(Color::Black)),
+                Span::raw("  Press "),
+                Span::styled("Esc", Style::default().add_modifier(Modifier::BOLD)),
+                Span::raw(" to cancel, "),
+                    ]
+            } else {
+                vec![Span::styled("Error", Style::default().bg(Color::White).fg(Color::Black)),
+                     Span::raw(" "),
+                     Span::styled(
+                         app.error.clone().unwrap_or(String::new()),
+                         Style::default().red(),
+                     )]
+            },
+            Style::default(),
+        ),
     };
     let help_message = Paragraph::new(Line::from(msg)).style(style);
     f.render_widget(help_message, area);

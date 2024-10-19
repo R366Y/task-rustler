@@ -51,7 +51,9 @@ fn run_app<B: ratatui::backend::Backend>(
                 InputMode::EditingExisting => {
                     handle_key_event_editing_existing_mode(key.code, &mut app)
                 }
-                InputMode::Export => {todo!()}
+                InputMode::Export => {
+                    handle_key_event_export_mode(key.code, &mut app)
+                }
             }
         }
     }
@@ -85,6 +87,9 @@ fn handle_key_event_view_mode(key: KeyEvent, app: &mut AppContext) {
         }
         (KeyCode::Char('d'), KeyModifiers::CONTROL) => {
             let _ = DeleteTaskCommand.execute(app);
+        }
+        (KeyCode::Char('e'), KeyModifiers::CONTROL) => {
+            app.input_mode = InputMode::Export;
         }
         _ => {}
     }
@@ -123,6 +128,13 @@ fn handle_key_event_editing_existing_mode(key: KeyCode, app: &mut AppContext) {
             let _ = StopEditingCommand.execute(app);
         }
         _ => {}
+    }
+}
+
+fn handle_key_event_export_mode(key: KeyCode, app: &mut AppContext) {
+    match key {
+        KeyCode::Esc => app.input_mode = InputMode::View,
+        _=>{}
     }
 }
 
