@@ -1,8 +1,9 @@
 [package]
 name = "task_rustler"
-version = "0.3.3"
+version = "0.4.0"
 authors = ["r366y"]
 edition = "2021"
+repository = "https://github.com/R366Y/task-rustler"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

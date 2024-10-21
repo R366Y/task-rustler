@@ -203,6 +203,8 @@ fn render_message_area(f: &mut Frame, app: &mut AppContext, area: Rect) {
                 Span::raw("  Press "),
                 Span::styled("Esc", Style::default().add_modifier(Modifier::BOLD)),
                 Span::raw(" to cancel, "),
+                Span::styled("Enter", Style::default().add_modifier(Modifier::BOLD)),
+                Span::raw(" to save file"),
                     ]
             } else {
                 vec![Span::styled("Error", Style::default().bg(Color::White).fg(Color::Black)),
