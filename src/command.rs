@@ -1,7 +1,9 @@
+use std::env;
 use crate::app::{AppContext, InputFieldType, InputMode};
 use crate::date::{TaskDate, DATE_FORMAT};
 use crate::task::Task;
 use anyhow::{anyhow, Context, Result};
+use crate::export::{export_tasks_to_icalendar, write_to_file};
 
 pub trait Command {
     fn execute(&self, app: &mut AppContext) -> Result<()>;
@@ -141,6 +143,36 @@ impl Command for StopEditingCommand {
         app.input_title.clear();
         app.input_description.clear();
         app.input_date.clear();
+        app.error = None;
+        Ok(())
+    }
+}
+
+pub struct EnterExportModeCommand;
+impl Command for EnterExportModeCommand {
+    fn execute(&self, app: &mut AppContext) -> Result<()> {
+        app.input_mode = InputMode::Export;
+        app.error = None;
+        let mut current_dir = env::current_dir().context("Could not access to the current directory")?;
+        current_dir.set_file_name("task_rustler.ics");
+        app.input_export_path = current_dir.display().to_string();
+        Ok(())
+    }
+}
+
+pub struct FinishingExportCommand;
+impl Command for FinishingExportCommand {
+    fn execute(&self, app: &mut AppContext) -> Result<()> {
+        let calendar = export_tasks_to_icalendar("task rustler", &app.task_list.items);
+        write_to_file(app.input_export_path.as_str(), calendar.to_string().as_str())
+    }
+}
+
+pub struct ExitExportModeCommand;
+impl Command for ExitExportModeCommand {
+    fn execute(&self, app: &mut AppContext) -> Result<()> {
+        app.input_mode = InputMode::View;
+        app.input_export_path.clear();
         app.error = None;
         Ok(())
     }

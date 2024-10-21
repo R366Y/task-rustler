@@ -20,6 +20,7 @@ pub enum InputMode {
     View,
     Adding,
     EditingExisting,
+    Export,
 }
 #[derive(Debug)]
 pub enum InputFieldType {
@@ -33,6 +34,7 @@ pub struct AppContext {
     pub input_title: String,
     pub input_description: String,
     pub input_date: String,
+    pub input_export_path: String,
     pub input_mode: InputMode,
     pub input_field: InputFieldType,
     pub tasks_service: TasksService,
@@ -48,6 +50,7 @@ impl AppContext {
             input_title: String::new(),
             input_description: String::new(),
             input_date: String::new(),
+            input_export_path: String::new(),
             input_mode: InputMode::View,
             input_field: InputFieldType::Title,
             tasks_service: TasksService::new(db_path),

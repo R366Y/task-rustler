@@ -48,9 +48,8 @@ fn run_app<B: ratatui::backend::Backend>(
                     _ => handle_key_event_view_mode(key, &mut app),
                 },
                 InputMode::Adding => handle_key_event_adding_mode(key.code, &mut app),
-                InputMode::EditingExisting => {
-                    handle_key_event_editing_existing_mode(key.code, &mut app)
-                }
+                InputMode::EditingExisting => handle_key_event_editing_existing_mode(key.code, &mut app),
+                InputMode::Export => handle_key_event_export_mode(key.code, &mut app),
             }
         }
     }
@@ -84,6 +83,9 @@ fn handle_key_event_view_mode(key: KeyEvent, app: &mut AppContext) {
         }
         (KeyCode::Char('d'), KeyModifiers::CONTROL) => {
             let _ = DeleteTaskCommand.execute(app);
+        }
+        (KeyCode::Char('e'), KeyModifiers::CONTROL) => {
+            handle_errors(EnterExportModeCommand, app);
         }
         _ => {}
     }
@@ -122,6 +124,25 @@ fn handle_key_event_editing_existing_mode(key: KeyCode, app: &mut AppContext) {
             let _ = StopEditingCommand.execute(app);
         }
         _ => {}
+    }
+}
+
+fn handle_key_event_export_mode(key: KeyCode, app: &mut AppContext) {
+    match key {
+        KeyCode::Esc => ExitExportModeCommand.execute(app).unwrap(),
+        KeyCode::Enter => {
+            handle_errors(FinishingExportCommand, app);
+            if app.error.is_none() {
+                app.input_mode = InputMode::View;
+            }
+        }
+        KeyCode::Char(c) => {
+            app.input_export_path.push(c);
+        }
+        KeyCode::Backspace => {
+            app.input_export_path.pop();
+        }
+        _=>{}
     }
 }
 

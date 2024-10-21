@@ -1,14 +1,23 @@
 [package]
 name = "task_rustler"
-version = "0.3.3"
+version = "0.4.0"
 authors = ["r366y"]
 edition = "2021"
+repository = "https://github.com/R366Y/task-rustler"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 anyhow = "1.0.86"
 chrono = "0.4.38"
+icalendar = "0.16.9"
 ratatui = "0.28.1"
 rusqlite = { version = "0.32.1", features = ["bundled"] }
 thiserror = "1.0.64"
+
+[profile.release]
+opt-level = 3
+
+[[bin]]
+name = "taskrs"
+path = "src/main.rs"

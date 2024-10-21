@@ -56,7 +56,23 @@ pub fn ui(f: &mut Frame, app: &mut AppContext) {
             render_input_date_area(f, app, input_date_area);
             render_message_area(f, app, message_area);
         }
+        InputMode::Export => {
+            let [main_area, input_area, message_area] = Layout::vertical([
+                Constraint::Min(1),
+                Constraint::Length(3),
+                Constraint::Length(1),
+            ])
+                .margin(1)
+                .areas(f.area());
+            let x = input_area.x + app.input_export_path.len() as u16 +1;
+            let y = input_area.y + 1;
+            f.set_cursor_position(Position::new(x, y));
+            render_list(f, app, main_area);
+            render_input_path_area(f, app, input_area);
+            render_message_area(f, app, message_area);
+        }
     }
+
     if app.show_help {
         let block = Block::bordered().title("Help");
         let area = render_popup(f.area(), 40, 80);
@@ -77,6 +93,7 @@ pub fn ui(f: &mut Frame, app: &mut AppContext) {
             Line::raw("'↑↓' to select task"),
             Line::raw("'Space' to toggle status"),
             Line::raw("'Ctrl + d' to delete the selected task"),
+            Line::raw("'Ctrl + e' to export the tasks to .ics file"),
             Line::raw("'Ctrl + q' to quit"),
         ]);
         f.render_widget(t1, popup_chunks[0]);
@@ -123,6 +140,11 @@ fn render_input_date_area(f: &mut Frame, app: &mut AppContext, area: Rect) {
     f.render_widget(input, area);
 }
 
+fn render_input_path_area(f: &mut Frame, app: &mut AppContext, area: Rect) {
+    let input = create_input_paragraph(app, app.input_export_path.as_str(), "File path");
+    f.render_widget(input, area);
+}
+
 fn render_message_area(f: &mut Frame, app: &mut AppContext, area: Rect) {
     let (msg, style) = match app.input_mode {
         InputMode::View => (
@@ -164,6 +186,26 @@ fn render_message_area(f: &mut Frame, app: &mut AppContext, area: Rect) {
                     Span::styled("Enter", Style::default().add_modifier(Modifier::BOLD)),
                     Span::raw(" to save changes"),
                 ]
+            } else {
+                vec![Span::styled("Error", Style::default().bg(Color::White).fg(Color::Black)),
+                     Span::raw(" "),
+                     Span::styled(
+                         app.error.clone().unwrap_or(String::new()),
+                         Style::default().red(),
+                     )]
+            },
+            Style::default(),
+        ),
+        InputMode::Export => (
+            if app.error.is_none() {
+                vec![
+                Span::styled("Export tasks list", Style::default().bg(Color::White).fg(Color::Black)),
+                Span::raw("  Press "),
+                Span::styled("Esc", Style::default().add_modifier(Modifier::BOLD)),
+                Span::raw(" to cancel, "),
+                Span::styled("Enter", Style::default().add_modifier(Modifier::BOLD)),
+                Span::raw(" to save file"),
+                    ]
             } else {
                 vec![Span::styled("Error", Style::default().bg(Color::White).fg(Color::Black)),
                      Span::raw(" "),
@@ -252,7 +294,7 @@ fn priority_to_color(priority: &Priority) -> Color {
 fn create_input_paragraph<'a>(app: &'a AppContext, text: &'a str, title: &'a str) -> Paragraph<'a> {
     Paragraph::new(text)
         .style(match app.input_mode {
-            InputMode::View => Style::default(),
+            InputMode::View | InputMode::Export => Style::default(),
             InputMode::Adding => Style::default().fg(Color::Green),
             InputMode::EditingExisting => Style::default().fg(Color::Yellow),
         })
