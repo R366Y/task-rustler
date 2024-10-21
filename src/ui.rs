@@ -57,16 +57,18 @@ pub fn ui(f: &mut Frame, app: &mut AppContext) {
             render_message_area(f, app, message_area);
         }
         InputMode::Export => {
-            let [main_area,input_path, message_area] = Layout::vertical([
+            let [main_area, input_area, message_area] = Layout::vertical([
                 Constraint::Min(1),
                 Constraint::Length(3),
                 Constraint::Length(1),
             ])
                 .margin(1)
                 .areas(f.area());
-
+            let x = input_area.x + app.input_export_path.len() as u16 +1;
+            let y = input_area.y + 1;
+            f.set_cursor_position(Position::new(x, y));
             render_list(f, app, main_area);
-            render_input_path_area(f, app, input_path);
+            render_input_path_area(f, app, input_area);
             render_message_area(f, app, message_area);
         }
     }
@@ -91,6 +93,7 @@ pub fn ui(f: &mut Frame, app: &mut AppContext) {
             Line::raw("'↑↓' to select task"),
             Line::raw("'Space' to toggle status"),
             Line::raw("'Ctrl + d' to delete the selected task"),
+            Line::raw("'Ctrl + e' to export the tasks to .ics file"),
             Line::raw("'Ctrl + q' to quit"),
         ]);
         f.render_widget(t1, popup_chunks[0]);
@@ -138,7 +141,7 @@ fn render_input_date_area(f: &mut Frame, app: &mut AppContext, area: Rect) {
 }
 
 fn render_input_path_area(f: &mut Frame, app: &mut AppContext, area: Rect) {
-    let input = create_input_paragraph(app, "", "File path");
+    let input = create_input_paragraph(app, app.input_export_path.as_str(), "File path");
     f.render_widget(input, area);
 }
 
